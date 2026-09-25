@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-ivory: #FAF8F5;
+  --color-ivory-warm: #F4EFEB;
+  --color-champagne: #C5A880;
+  --color-champagne-dark: #A07F55;
+  --color-champagne-light: #F2ECE1;
+  --color-charcoal: #18181A;
+  --color-charcoal-soft: #28282B;
+  --color-charcoal-muted: #6B6B70;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #FAF8F5;
+    color: #18181A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-editorial {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Safe area padding for modern notch & gesture bar phones */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 16px);
+}
+
+/* Subtle hairline dividers and subtle blur effects */
+.hairline-b {
+  border-bottom: 1px solid rgba(24, 24, 26, 0.08);
+}
+
+.hairline-t {
+  border-top: 1px solid rgba(24, 24, 26, 0.08);
+}
+
+.hairline-border {
+  border: 1px solid rgba(24, 24, 26, 0.08);
+}
+
+.hairline-border-dark {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Smooth modal bottom-sheet backdrop */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
