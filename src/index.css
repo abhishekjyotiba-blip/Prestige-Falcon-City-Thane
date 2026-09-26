@@ -3,21 +3,22 @@
 @theme {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --color-ivory: #FAF8F5;
-  --color-ivory-warm: #F4EFEB;
-  --color-champagne: #C5A880;
-  --color-champagne-dark: #A07F55;
-  --color-champagne-light: #F2ECE1;
-  --color-charcoal: #18181A;
-  --color-charcoal-soft: #28282B;
-  --color-charcoal-muted: #6B6B70;
+  --color-ivory: #F5F1E9;
+  --color-ivory-warm: #EFE9DE;
+  --color-ivory-light: #FAF8F4;
+  --color-champagne: #B59A68;
+  --color-champagne-dark: #967E51;
+  --color-champagne-light: #F3ECE0;
+  --color-charcoal: #161616;
+  --color-charcoal-card: #202022;
+  --color-charcoal-muted: #66625C;
 }
 
 @layer base {
   body {
     font-family: var(--font-sans);
-    background-color: #FAF8F5;
-    color: #18181A;
+    background-color: #F5F1E9;
+    color: #161616;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -27,7 +28,7 @@
   }
 }
 
-/* Safe area padding for modern notch & gesture bar phones */
+/* Safe area padding for modern phones */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
@@ -36,17 +37,17 @@
   padding-top: env(safe-area-inset-top, 16px);
 }
 
-/* Subtle hairline dividers and subtle blur effects */
+/* Subtle hairline dividers and borders */
 .hairline-b {
-  border-bottom: 1px solid rgba(24, 24, 26, 0.08);
+  border-bottom: 1px solid rgba(20, 20, 20, 0.10);
 }
 
 .hairline-t {
-  border-top: 1px solid rgba(24, 24, 26, 0.08);
+  border-top: 1px solid rgba(20, 20, 20, 0.10);
 }
 
 .hairline-border {
-  border: 1px solid rgba(24, 24, 26, 0.08);
+  border: 1px solid rgba(20, 20, 20, 0.10);
 }
 
 .hairline-border-dark {

@@ -3,20 +3,17 @@ import { LeadIntent } from './types';
 import { getUrlParams, trackEvent, getAttributionData } from './utils/analytics';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
+import { VisualBuyerPackMockupSection } from './components/VisualBuyerPackMockupSection';
+import { WhatYouGetSection } from './components/WhatYouGetSection';
 import { ScaleSection } from './components/ScaleSection';
-import { BlurredVaultTeaser } from './components/BlurredVaultTeaser';
-import { MasterPlanSection } from './components/MasterPlanSection';
-import { ResidencesSection } from './components/ResidencesSection';
-import { CostSheetSection } from './components/CostSheetSection';
-import { FloorPlanSection } from './components/FloorPlanSection';
+import { PriceRevealSection } from './components/PriceRevealSection';
+import { ConfigurationSelectorSection } from './components/ConfigurationSelectorSection';
+import { FloorPlanCuriositySection } from './components/FloorPlanCuriositySection';
 import { LocationSection } from './components/LocationSection';
-import { InfrastructureSection } from './components/InfrastructureSection';
-import { PrestigeSection } from './components/PrestigeSection';
-import { IntegratedDevelopmentSection } from './components/IntegratedDevelopmentSection';
-import { AmenitiesTeaserSection } from './components/AmenitiesTeaserSection';
-import { BuyerAdvantageSection } from './components/BuyerAdvantageSection';
-import { TransparencySection } from './components/TransparencySection';
-import { SiteVisitSection } from './components/SiteVisitSection';
+import { WhyOnTheRadarSection } from './components/WhyOnTheRadarSection';
+import { BeforeYouBuySection } from './components/BeforeYouBuySection';
+import { ProjectStatusSection } from './components/ProjectStatusSection';
+import { ProjectUpdateAccessSection } from './components/ProjectUpdateAccessSection';
 import { FaqSection } from './components/FaqSection';
 import { FinalConversionSection } from './components/FinalConversionSection';
 import { DisclaimerFooter } from './components/DisclaimerFooter';
@@ -26,8 +23,9 @@ import { LeadModal } from './components/LeadModal';
 
 export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [leadIntent, setLeadIntent] = useState<LeadIntent>('launch_kit');
+  const [leadIntent, setLeadIntent] = useState<LeadIntent | string>('launch_kit');
   const [sourceSection, setSourceSection] = useState('hero_main');
+  const [leadConfiguration, setLeadConfiguration] = useState<string | undefined>(undefined);
   const [personalizedTerm, setPersonalizedTerm] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -39,7 +37,8 @@ export default function App() {
       setPersonalizedTerm(term);
     }
 
-    // 2. Set up scroll depth tracking (50%, 75%, 90%)
+    // 2. Set up scroll depth tracking (25%, 50%, 75%, 90%)
+    let tracked25 = false;
     let tracked50 = false;
     let tracked75 = false;
     let tracked90 = false;
@@ -51,17 +50,21 @@ export default function App() {
       const sh = 'scrollHeight';
       const percent = ((h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight)) * 100;
 
+      if (!tracked25 && percent >= 25) {
+        tracked25 = true;
+        trackEvent('scroll_25');
+      }
       if (!tracked50 && percent >= 50) {
         tracked50 = true;
-        trackEvent('50_percent_scroll');
+        trackEvent('scroll_50');
       }
       if (!tracked75 && percent >= 75) {
         tracked75 = true;
-        trackEvent('75_percent_scroll');
+        trackEvent('scroll_75');
       }
       if (!tracked90 && percent >= 90) {
         tracked90 = true;
-        trackEvent('90_percent_scroll');
+        trackEvent('scroll_90');
       }
     };
 
@@ -69,9 +72,10 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleOpenModal = (intent: LeadIntent, section: string) => {
+  const handleOpenModal = (intent: LeadIntent | string, section: string, config?: string) => {
     setLeadIntent(intent);
     setSourceSection(section);
+    setLeadConfiguration(config);
     setModalOpen(true);
   };
 
@@ -80,84 +84,78 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#18181A] selection:bg-[#E8DFC9] selection:text-[#18181A] relative">
-      {/* Minimal PPC Floating Header */}
+    <div className="min-h-screen bg-[#F5F1E9] text-[#161616] selection:bg-[#EFE9DE] selection:text-[#161616] relative">
+      {/* Minimal Floating PPC Header */}
       <Navbar onOpenModal={handleOpenModal} />
 
       <main>
-        {/* Hero Section (Section 1) */}
+        {/* Screen 1: Reworked Hero with Direct Value Box & ₹1.60 Cr* hook */}
         <HeroSection
           onOpenModal={handleOpenModal}
           personalizedTerm={personalizedTerm}
         />
 
-        {/* The Restricted Blurred Vault Teaser (High Temptation) */}
-        <BlurredVaultTeaser onOpenModal={handleOpenModal} />
+        {/* Screen 2: Tangible Visual Document Proof (Buyer Pack Mockups) */}
+        <div id="buyer-pack-preview">
+          <VisualBuyerPackMockupSection onOpenModal={handleOpenModal} />
+        </div>
 
-        {/* The Scale (Section 2) */}
-        <ScaleSection />
+        {/* Screen 3: "Everything you need before you speak to sales" 6-item grid */}
+        <WhatYouGetSection onOpenModal={handleOpenModal} />
 
-        {/* Master Plan & Zoning (Visual Interactive Map) */}
-        <MasterPlanSection onOpenModal={handleOpenModal} />
+        {/* Screen 4: Dense 2x2 Project Scale Section (14.6 Acres, 5M+ Sq.Ft., ₹6,000 Cr, Prestige Group) */}
+        <ScaleSection onOpenModal={handleOpenModal} />
 
-        {/* The Residences (Section 3) */}
-        <ResidencesSection onOpenModal={handleOpenModal} />
+        {/* Screen 5: Price Reveal Component with Partially Obscured Cost Worksheet */}
+        <PriceRevealSection onOpenModal={handleOpenModal} />
 
-        {/* Cost Sheet Conversion Moment (Section 4) */}
-        <CostSheetSection onOpenModal={handleOpenModal} />
+        {/* Screen 6: Interactive Configuration Selector (2 Bed, 3 Bed, 4 Bed) */}
+        <ConfigurationSelectorSection onOpenModal={handleOpenModal} />
 
-        {/* Floor Plan Curiosity (Section 5) */}
-        <FloorPlanSection onOpenModal={handleOpenModal} />
+        {/* Screen 7: Architectural Floor Plan Curiosity Section with 3 locked tiles */}
+        <FloorPlanCuriositySection onOpenModal={handleOpenModal} />
 
-        {/* Location Story (Section 6) */}
+        {/* Screen 8: Location Section with Map Visual & Locked Location Intelligence Report */}
         <LocationSection onOpenModal={handleOpenModal} />
 
-        {/* Infrastructure / Future Thane (Section 7) */}
-        <InfrastructureSection onOpenModal={handleOpenModal} />
+        {/* Screen 9: "Why this launch is on the radar" compact editorial reasons */}
+        <WhyOnTheRadarSection onOpenModal={handleOpenModal} />
 
-        {/* Prestige Developer (Section 8) */}
-        <PrestigeSection />
+        {/* Screen 10: "Before you buy, know more" Strategic Dark Contrast Section (EstateWise advantage) */}
+        <BeforeYouBuySection onOpenModal={handleOpenModal} />
 
-        {/* Integrated Development (Section 9) */}
-        <IntegratedDevelopmentSection />
+        {/* Screen 11: Project Status Component (Confirmed, Indicative, Awaited) */}
+        <ProjectStatusSection onOpenModal={handleOpenModal} />
 
-        {/* Amenities Teaser (Section 10) */}
-        <AmenitiesTeaserSection onOpenModal={handleOpenModal} />
+        {/* Screen 12: Low-Pressure "Don't want a sales call yet?" Project Update Access */}
+        <ProjectUpdateAccessSection onOpenModal={handleOpenModal} />
 
-        {/* The EstateWise Buyer Advantage (Section 11) */}
-        <BuyerAdvantageSection onOpenModal={handleOpenModal} />
-
-        {/* Information Transparency (Section 12) */}
-        <TransparencySection />
-
-        {/* High-Intent Site Visit CTA (Section 13) */}
-        <SiteVisitSection onOpenModal={handleOpenModal} />
-
-        {/* High-Intent FAQ (Section 14) */}
+        {/* Screen 13: High-Intent FAQ */}
         <FaqSection />
 
-        {/* Final Conversion Section (Section 15) */}
+        {/* Screen 14: Final Conversion Section ("You've seen the overview. Now get the numbers.") */}
         <FinalConversionSection onOpenModal={handleOpenModal} />
       </main>
 
-      {/* Minimalist Advisory Disclaimer & Footer */}
+      {/* Advisory Disclaimer & Minimal Footer */}
       <DisclaimerFooter />
 
-      {/* Mobile Sticky Conversion Bar */}
+      {/* Dynamic Sticky Mobile Bottom Conversion Bar */}
       <StickyMobileBar
         onOpenModal={handleOpenModal}
         personalizedTerm={personalizedTerm}
       />
 
-      {/* Exit Intent & Non-Blocking Scroll Depth Card */}
+      {/* Small Floating Value Reminder (~35% scroll depth) & Desktop Exit Intent */}
       <ExitIntentNotice onOpenModal={handleOpenModal} />
 
-      {/* The Dynamic Lead Capture Bottom Sheet (Mobile) & Modal (Desktop) */}
+      {/* The Unlock Experience Lead Capture Bottom Sheet & Modal */}
       <LeadModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
         leadIntent={leadIntent}
         sourceSection={sourceSection}
+        leadConfiguration={leadConfiguration}
       />
     </div>
   );

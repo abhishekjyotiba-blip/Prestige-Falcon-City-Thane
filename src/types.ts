@@ -1,5 +1,6 @@
 export type LeadIntent =
   | 'launch_kit'
+  | 'buyer_pack'
   | 'cost_sheet'
   | 'floor_plan'
   | 'location_report'
@@ -7,15 +8,21 @@ export type LeadIntent =
   | 'offer_update'
   | 'site_visit'
   | 'callback'
-  | 'buyer_pack'
-  | 'amenities_update';
+  | 'project_updates'
+  | 'rera_update'
+  | 'amenities_update'
+  | '2bhk'
+  | '3bhk'
+  | '4bhk'
+  | 'advisor_call';
 
 export interface LeadSubmission {
   id: string;
   name: string;
   mobile: string;
-  leadIntent: LeadIntent;
+  leadIntent: LeadIntent | string;
   sourceSection?: string;
+  leadConfiguration?: string;
   project: string;
   pageUrl: string;
   timestamp: string;
@@ -32,6 +39,8 @@ export interface LeadSubmission {
 }
 
 export type AnalyticsEventType =
+  | 'cta_view'
+  | 'cta_click'
   | 'hero_cta_click'
   | 'cost_sheet_click'
   | 'floor_plan_click'
@@ -42,9 +51,12 @@ export type AnalyticsEventType =
   | 'whatsapp_click'
   | 'form_open'
   | 'form_start'
+  | 'mobile_entered'
   | 'lead_submit'
   | 'lead_success'
+  | 'qualification_step'
   | 'secondary_qualification_complete'
-  | '50_percent_scroll'
-  | '75_percent_scroll'
-  | '90_percent_scroll';
+  | 'scroll_25'
+  | 'scroll_50'
+  | 'scroll_75'
+  | 'scroll_90';

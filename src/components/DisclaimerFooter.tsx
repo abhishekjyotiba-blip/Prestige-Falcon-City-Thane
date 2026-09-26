@@ -5,39 +5,35 @@ export const DisclaimerFooter: React.FC = () => {
   const [legalExpanded, setLegalExpanded] = useState(false);
 
   return (
-    <footer className="bg-[#0D0D0E] text-[#88888D] pt-12 pb-24 md:pb-14 border-t border-white/8 text-xs font-light">
-      <div className="max-w-6xl mx-auto px-5 md:px-8">
+    <footer className="bg-[#121212] text-[#88888D] pt-10 pb-22 md:pb-12 border-t border-white/8 text-xs font-light">
+      <div className="max-w-5xl mx-auto px-4 md:px-8">
         {/* Top Wordmark & Advisory Notice */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-8 border-b border-white/8 gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-white/8 gap-4">
           <div>
-            <div className="font-serif text-2xl text-white tracking-tight">
-              Estate<span className="italic text-[#C5A880]">Wise</span>
+            <div className="font-serif text-xl sm:text-2xl text-white tracking-tight">
+              Estate<span className="italic text-[#B59A68]">Wise</span>
             </div>
-            <div className="text-[11px] uppercase tracking-widest text-[#C5A880]/80 mt-1">
-              Private Real Estate Advisory & Research
+            <div className="text-[10px] uppercase tracking-widest text-[#B59A68] mt-0.5">
+              Private Real Estate Advisory & Research Desk
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-xs text-white/60">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-white/60">
             <a href="mailto:admin@estatewise.in" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <Mail className="w-3.5 h-3.5 text-[#C5A880]" />
+              <Mail className="w-3.5 h-3.5 text-[#B59A68]" />
               <span>admin@estatewise.in</span>
             </a>
             <a href="tel:+919820000000" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <Phone className="w-3.5 h-3.5 text-[#C5A880]" />
+              <Phone className="w-3.5 h-3.5 text-[#B59A68]" />
               <span>+91 98200 00000</span>
             </a>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#C5A880]" />
-              <span>Thane & MMR Advisory Desk</span>
-            </div>
           </div>
         </div>
 
-        {/* Concise Disclaimer Strip with Expandable Legal Disclosure */}
-        <div className="py-6 border-b border-white/8 space-y-3">
-          <div className="flex items-start gap-2.5 text-[11px] leading-relaxed text-white/50">
-            <Shield className="w-4 h-4 text-[#C5A880]/80 shrink-0 mt-0.5" />
+        {/* Disclaimer Strip */}
+        <div className="py-5 border-b border-white/8 space-y-2">
+          <div className="flex items-start gap-2 text-[11px] leading-relaxed text-white/50">
+            <Shield className="w-4 h-4 text-[#B59A68] shrink-0 mt-0.5" />
             <div>
               <p>
                 <strong>Advisory Disclaimer:</strong> EstateWise is an independent real-estate advisory and research consultancy. This landing page is a promotional research portal for the proposed development by Prestige Estates Projects Ltd near Kolshet–Balkum Road, Thane. Indicative pricing, floor plans, and amenities are compiled from publicly available developer announcements, press releases, and market benchmarking. This does not constitute an official developer quotation or an invitation to offer.
@@ -45,18 +41,17 @@ export const DisclaimerFooter: React.FC = () => {
             </div>
           </div>
 
-          {/* Expandable Full Legal Notes */}
           <div>
             <button
               onClick={() => setLegalExpanded(!legalExpanded)}
-              className="text-[11px] text-[#C5A880] hover:text-[#e8dfc9] flex items-center gap-1 cursor-pointer underline underline-offset-4"
+              className="text-[11px] text-[#B59A68] hover:text-[#F3ECE0] flex items-center gap-1 cursor-pointer underline underline-offset-4"
             >
               <span>{legalExpanded ? 'Collapse regulatory details' : 'Read full MahaRERA compliance & advisory terms'}</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${legalExpanded ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 transition-transform ${legalExpanded ? 'rotate-180' : ''}`} />
             </button>
 
             {legalExpanded && (
-              <div className="mt-3 p-4 rounded-xl bg-white/5 text-[11px] leading-relaxed text-white/50 space-y-2 border border-white/5 animate-fade-in">
+              <div className="mt-3 p-4 rounded-xl bg-white/5 text-[10px] sm:text-[11px] leading-relaxed text-white/50 space-y-1.5 border border-white/5 animate-fade-in">
                 <p>
                   1. <strong>MahaRERA Registration:</strong> MahaRERA registration for the Thane project is currently awaited / in process. Official sales, commercial agreements, and bookings will only be initiated following receipt of the valid MahaRERA registration number.
                 </p>
@@ -74,17 +69,17 @@ export const DisclaimerFooter: React.FC = () => {
           </div>
         </div>
 
-        {/* Minimal Copyright and Non-Distracting Links */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/40 gap-4">
+        {/* Minimal Copyright */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-white/40 gap-2">
           <div>
-            © {new Date().getFullYear()} EstateWise India. All rights reserved. Built for private marketing & lead generation.
+            © {new Date().getFullYear()} EstateWise India. All rights reserved.
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hover:text-white/70 transition-colors cursor-pointer">Privacy Policy</span>
+          <div className="flex items-center gap-3">
+            <span>Privacy Policy</span>
             <span>·</span>
-            <span className="hover:text-white/70 transition-colors cursor-pointer">Terms of Advisory</span>
+            <span>Terms of Advisory</span>
             <span>·</span>
-            <span className="hover:text-white/70 transition-colors cursor-pointer">RERA Compliance</span>
+            <span>MahaRERA Compliance</span>
           </div>
         </div>
       </div>

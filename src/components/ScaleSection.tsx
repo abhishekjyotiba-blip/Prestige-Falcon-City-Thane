@@ -1,71 +1,116 @@
 import React from 'react';
+import { ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
+import { LeadIntent } from '../types';
+import { trackEvent } from '../utils/analytics';
 
-export const ScaleSection: React.FC = () => {
+interface ScaleSectionProps {
+  onOpenModal: (intent: LeadIntent | string, section: string) => void;
+}
+
+export const ScaleSection: React.FC<ScaleSectionProps> = ({ onOpenModal }) => {
   return (
-    <section id="scale" className="py-14 md:py-20 bg-[#FAF8F5] text-[#18181A] relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Section Tag */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-[11px] uppercase tracking-[0.24em] text-[#A07F55] font-semibold">
-            THE SCALE
+    <section id="scale" className="py-12 md:py-16 bg-[#EFE9DE] text-[#161616] relative border-b border-[#161616]/10">
+      <div className="max-w-5xl mx-auto px-4 md:px-8">
+        {/* Section Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] md:text-xs uppercase tracking-[0.24em] text-[#967E51] font-bold">
+            PROJECT MAGNITUDE
           </span>
-          <div className="h-px flex-1 bg-[#18181A]/10 max-w-xs" />
+          <div className="h-px flex-1 bg-[#161616]/10 max-w-xs" />
         </div>
 
-        {/* Big Graphic Numbers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="p-6 md:p-8 rounded-2xl bg-[#F4EFEB] border border-[#18181A]/8">
-            <div className="font-serif text-5xl md:text-7xl text-[#18181A] font-light leading-none tabular-nums">
-              14.6
-            </div>
-            <div className="mt-2 text-xs uppercase tracking-widest text-[#A07F55] font-bold">
-              ACRES MASTERPLAN
-            </div>
-            <p className="mt-1.5 text-xs text-[#555559]">
-              Contiguous prime land parcel at Kolshet–Balkum.
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3">
+          <div>
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#161616] font-normal leading-[1.05]">
+              The scale speaks quietly.
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-[#66625C] font-light max-w-md">
+              A flagship mixed-use masterplan envisioned for Thane West by Prestige Estates Projects Ltd.
             </p>
           </div>
 
-          <div className="p-6 md:p-8 rounded-2xl bg-[#F4EFEB] border border-[#18181A]/8">
-            <div className="font-serif text-5xl md:text-7xl text-[#18181A] font-light leading-none tabular-nums">
-              5M<span className="text-[#A07F55] font-thin">+</span>
+          <button
+            onClick={() => {
+              trackEvent('hero_cta_click', { section: 'scale_project_brief_btn' });
+              onOpenModal('launch_kit', 'scale_project_brief');
+            }}
+            className="self-start md:self-auto h-11 px-5 rounded-xl bg-white hover:bg-[#FAF8F4] text-[#161616] font-bold text-xs uppercase tracking-wider transition-all border border-[#161616]/15 shadow-xs flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <span>GET PROJECT BRIEF</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[#B59A68]" />
+          </button>
+        </div>
+
+        {/* 2x2 Dense Mobile Composition */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+          {/* Item 1 */}
+          <div className="p-4 md:p-5 rounded-2xl bg-white border border-[#161616]/8 shadow-xs">
+            <div className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#161616] font-light leading-none tabular-nums">
+              ~14.6
             </div>
-            <div className="mt-2 text-xs uppercase tracking-widest text-[#A07F55] font-bold">
-              SQ.FT. POTENTIAL
+            <div className="mt-2 text-[10px] sm:text-xs uppercase tracking-wider text-[#967E51] font-bold">
+              ACRES
             </div>
-            <p className="mt-1.5 text-xs text-[#555559]">
-              High-rise towers, landscaped podium & retail high-street.
+            <p className="mt-1 text-[11px] text-[#66625C] leading-snug">
+              Contiguous prime parcel near Kolshet–Balkum Road.
             </p>
           </div>
 
-          <div className="p-6 md:p-8 rounded-2xl bg-[#F4EFEB] border border-[#18181A]/8">
-            <div className="font-serif text-5xl md:text-7xl text-[#18181A] font-light leading-none tabular-nums">
-              ₹6,000 <span className="text-3xl text-[#A07F55]">CR</span>
+          {/* Item 2 */}
+          <div className="p-4 md:p-5 rounded-2xl bg-white border border-[#161616]/8 shadow-xs">
+            <div className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#161616] font-light leading-none tabular-nums">
+              5M<span className="text-[#B59A68] font-thin">+</span>
             </div>
-            <div className="mt-2 text-xs uppercase tracking-widest text-[#A07F55] font-bold">
-              ESTIMATED GDV
+            <div className="mt-2 text-[10px] sm:text-xs uppercase tracking-wider text-[#967E51] font-bold">
+              SQ.FT.
             </div>
-            <p className="mt-1.5 text-xs text-[#555559]">
-              Prestige Group&apos;s flagship development in Thane.
+            <p className="mt-1 text-[11px] text-[#66625C] leading-snug">
+              Estimated development potential across phases.
+            </p>
+          </div>
+
+          {/* Item 3 */}
+          <div className="p-4 md:p-5 rounded-2xl bg-white border border-[#161616]/8 shadow-xs">
+            <div className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#161616] font-light leading-none tabular-nums">
+              ₹6,000 <span className="text-xl sm:text-2xl text-[#B59A68]">CR</span>
+            </div>
+            <div className="mt-2 text-[10px] sm:text-xs uppercase tracking-wider text-[#967E51] font-bold">
+              EST. GDV
+            </div>
+            <p className="mt-1 text-[11px] text-[#66625C] leading-snug">
+              Gross Development Value of the proposed enclave.
+            </p>
+          </div>
+
+          {/* Item 4 */}
+          <div className="p-4 md:p-5 rounded-2xl bg-white border border-[#161616]/8 shadow-xs">
+            <div className="font-serif text-2xl sm:text-3xl text-[#161616] font-light leading-none">
+              PRESTIGE
+            </div>
+            <div className="mt-2 text-[10px] sm:text-xs uppercase tracking-wider text-[#967E51] font-bold">
+              GROUP
+            </div>
+            <p className="mt-1 text-[11px] text-[#66625C] leading-snug">
+              CRISIL DA1 highest developer rating in India.
             </p>
           </div>
         </div>
 
-        {/* High-Impact Visual Banner */}
-        <div className="relative rounded-2xl overflow-hidden aspect-[16/8] md:aspect-[21/8] bg-black shadow-xl">
+        {/* Compact Editorial Visual Strip */}
+        <div className="relative rounded-2xl overflow-hidden aspect-[21/9] sm:aspect-[24/8] bg-black shadow-md">
           <img
             src="/src/assets/images/architecture_scale_exterior_1790328236147.jpg"
-            alt="Prestige Thane Scale and Masterplan"
+            alt="Prestige Thane Scale and Vision"
             loading="lazy"
             className="w-full h-full object-cover object-center opacity-85"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
-            <span className="font-serif text-base md:text-xl text-[#E8DFC9]">
-              A transformative destination for Northern Thane
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-xs">
+            <span className="font-serif text-sm sm:text-base text-[#F3ECE0]">
+              Residential-Led Enclave with Integrated High-Street Retail
             </span>
-            <span className="text-[10px] uppercase tracking-wider bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-sm border border-white/10 hidden sm:inline-block">
-              Architectural Concept
+            <span className="text-[9px] uppercase tracking-wider bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10 hidden sm:inline-block">
+              Representative Visual
             </span>
           </div>
         </div>
