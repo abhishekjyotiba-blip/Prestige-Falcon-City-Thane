@@ -221,10 +221,12 @@ function RequestDialog({
       document.removeEventListener("keydown", onKeyDown);
       requestAnimationFrame(() => {
         if (returnFocus?.isConnected) returnFocus.focus();
-        else
-          document
-            .querySelector<HTMLElement>(".site-header .nav-action")
-            ?.focus();
+        else {
+          const fallback = window.matchMedia("(max-width: 700px)").matches
+            ? ".site-header .menu-toggle"
+            : ".site-header .nav-action";
+          document.querySelector<HTMLElement>(fallback)?.focus();
+        }
       });
     };
   }, [onClose, returnFocus, formAvailable]);
