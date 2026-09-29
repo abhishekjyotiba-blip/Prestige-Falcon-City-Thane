@@ -1,162 +1,150 @@
-import React, { useState, useEffect } from 'react';
-import { LeadIntent } from './types';
-import { getUrlParams, trackEvent, getAttributionData } from './utils/analytics';
-import { Navbar } from './components/Navbar';
-import { HeroSection } from './components/HeroSection';
-import { VisualBuyerPackMockupSection } from './components/VisualBuyerPackMockupSection';
-import { WhatYouGetSection } from './components/WhatYouGetSection';
-import { ScaleSection } from './components/ScaleSection';
-import { PriceRevealSection } from './components/PriceRevealSection';
-import { ConfigurationSelectorSection } from './components/ConfigurationSelectorSection';
-import { FloorPlanCuriositySection } from './components/FloorPlanCuriositySection';
-import { LocationSection } from './components/LocationSection';
-import { WhyOnTheRadarSection } from './components/WhyOnTheRadarSection';
-import { BeforeYouBuySection } from './components/BeforeYouBuySection';
-import { ProjectStatusSection } from './components/ProjectStatusSection';
-import { ProjectUpdateAccessSection } from './components/ProjectUpdateAccessSection';
-import { FaqSection } from './components/FaqSection';
-import { FinalConversionSection } from './components/FinalConversionSection';
-import { DisclaimerFooter } from './components/DisclaimerFooter';
-import { StickyMobileBar } from './components/StickyMobileBar';
-import { ExitIntentNotice } from './components/ExitIntentNotice';
-import { LeadModal } from './components/LeadModal';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowDown, ArrowRight, ChevronLeft, ChevronRight, LockKeyhole, Menu, Play, X } from 'lucide-react';
+import { LocationExperience } from './components/LocationExperience';
+import heroImage from './assets/images/temporary-illustrative-exterior.jpg';
+import './landing.css';
 
-export default function App() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [leadIntent, setLeadIntent] = useState<LeadIntent | string>('launch_kit');
-  const [sourceSection, setSourceSection] = useState('hero_main');
-  const [leadConfiguration, setLeadConfiguration] = useState<string | undefined>(undefined);
-  const [personalizedTerm, setPersonalizedTerm] = useState<string | undefined>(undefined);
+type Intent = 'price' | 'master_plan' | 'floor_plan' | 'video' | 'callback';
+type Card = { intent: Intent; title: string; eyebrow: string; action: string; visual: 'cost' | 'master' | 'floor' | 'video' };
+const cards: Card[] = [
+  { intent: 'price', title: 'Pricing & cost sheet', eyebrow: 'THE NUMBERS', action: 'Request price update', visual: 'cost' },
+  { intent: 'master_plan', title: 'Master plan', eyebrow: 'THE BIG PICTURE', action: 'Request master plan', visual: 'master' },
+  { intent: 'floor_plan', title: 'Floor plans', eyebrow: 'THE RESIDENCES', action: 'Request floor plans', visual: 'floor' },
+  { intent: 'video', title: 'Project film', eyebrow: 'THE EXPERIENCE', action: 'Request video update', visual: 'video' },
+];
+const interests = {
+  amenities: [
+    { name: 'Space to unwind', detail: 'Visual direction only', style: 'leisure' },
+    { name: 'Space to move', detail: 'Visual direction only', style: 'movement' },
+    { name: 'Space to gather', detail: 'Visual direction only', style: 'garden' },
+  ],
+  facilities: [
+    { name: 'Thoughtful everyday spaces', detail: 'Details pending approval', style: 'movement' },
+    { name: 'A considered arrival', detail: 'Details pending approval', style: 'garden' },
+    { name: 'Room for what matters', detail: 'Details pending approval', style: 'leisure' },
+  ],
+};
+const notice = 'Visuals are illustrative only. They do not represent the actual project.';
 
+function PreviewArt({ kind }: { kind: Card['visual'] }) {
+  if (kind === 'video') return <div className="preview-art video-art" aria-hidden="true"><span className="play-disc"><Play size={22} fill="currentColor" /></span><span className="visual-stamp">VIDEO PREVIEW</span></div>;
+  if (kind === 'cost') return <div className="preview-art cost-art" aria-hidden="true"><div className="sample-sheet"><span className="sheet-head" /><span /><span /><span /><span /><span className="sheet-head" /></div><span className="visual-stamp">ILLUSTRATIVE SAMPLE</span></div>;
+  if (kind === 'master') return <div className="preview-art plan-art master-art" aria-hidden="true"><svg viewBox="0 0 440 250"><path d="M18 43H423V222H18z M43 66h111v64H43z M185 57h100v52H185z M317 66h79v73h-79z M36 158h91v48H36z M168 144h115v62H168z M315 164h90v43h-90z" fill="none" stroke="currentColor" strokeWidth="4"/><path d="M145 42v184M302 43v181M20 146h403" fill="none" stroke="currentColor" strokeWidth="12" opacity=".34"/><circle cx="222" cy="125" r="20" fill="none" stroke="currentColor" strokeWidth="4" /></svg><span className="visual-stamp">ILLUSTRATIVE SAMPLE</span></div>;
+  return <div className="preview-art plan-art floor-art" aria-hidden="true"><svg viewBox="0 0 440 250"><path d="M46 23h346v205H46z M46 106h145V23 M190 106v122 M190 156h202 M282 23v133 M282 92h110 M93 106v122 M46 184h144" fill="none" stroke="currentColor" strokeWidth="5"/><path d="M204 156a48 48 0 0 1 48-48M282 95a39 39 0 0 1-39 39M92 180a39 39 0 0 1 39-39" fill="none" stroke="currentColor" strokeWidth="2"/></svg><span className="visual-stamp">ILLUSTRATIVE SAMPLE</span></div>;
+}
+
+function RequestDialog({ intent, sourceSection, onClose }: { intent: Intent; sourceSection: string; onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [result, setResult] = useState<'saved' | 'unavailable' | null>(null);
+  const [error, setError] = useState('');
+  const firstInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    // 1. Initialize PPC Attribution & read search keywords
-    const attribution = getAttributionData();
-    const params = getUrlParams();
-    const term = params['utm_term'] || params['keyword'] || attribution.utmTerm;
-    if (term) {
-      setPersonalizedTerm(term);
-    }
-
-    // 2. Set up scroll depth tracking (25%, 50%, 75%, 90%)
-    let tracked25 = false;
-    let tracked50 = false;
-    let tracked75 = false;
-    let tracked90 = false;
-
-    const handleScroll = () => {
-      const h = document.documentElement;
-      const b = document.body;
-      const st = 'scrollTop';
-      const sh = 'scrollHeight';
-      const percent = ((h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight)) * 100;
-
-      if (!tracked25 && percent >= 25) {
-        tracked25 = true;
-        trackEvent('scroll_25');
-      }
-      if (!tracked50 && percent >= 50) {
-        tracked50 = true;
-        trackEvent('scroll_50');
-      }
-      if (!tracked75 && percent >= 75) {
-        tracked75 = true;
-        trackEvent('scroll_75');
-      }
-      if (!tracked90 && percent >= 90) {
-        tracked90 = true;
-        trackEvent('scroll_90');
+    const previous = document.activeElement as HTMLElement | null;
+    const before = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    firstInput.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'Tab') {
+        const elements = [...document.querySelectorAll<HTMLElement>('.request-dialog button:not([disabled]), .request-dialog input:not([disabled])')];
+        const index = elements.indexOf(document.activeElement as HTMLElement);
+        if (event.shiftKey && index === 0) { event.preventDefault(); elements.at(-1)?.focus(); }
+        else if (!event.shiftKey && index === elements.length - 1) { event.preventDefault(); elements[0]?.focus(); }
       }
     };
+    document.addEventListener('keydown', onKeyDown);
+    return () => { document.body.style.overflow = before; document.removeEventListener('keydown', onKeyDown); previous?.focus(); };
+  }, [onClose]);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleOpenModal = (intent: LeadIntent | string, section: string, config?: string) => {
-    setLeadIntent(intent);
-    setSourceSection(section);
-    setLeadConfiguration(config);
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#F5F1E9] text-[#161616] selection:bg-[#EFE9DE] selection:text-[#161616] relative">
-      {/* Minimal Floating PPC Header */}
-      <Navbar onOpenModal={handleOpenModal} />
-
-      <main>
-        {/* Screen 1: Reworked Hero with Direct Value Box & ₹1.60 Cr* hook */}
-        <HeroSection
-          onOpenModal={handleOpenModal}
-          personalizedTerm={personalizedTerm}
-        />
-
-        {/* Screen 2: Tangible Visual Document Proof (Buyer Pack Mockups) */}
-        <div id="buyer-pack-preview">
-          <VisualBuyerPackMockupSection onOpenModal={handleOpenModal} />
-        </div>
-
-        {/* Screen 3: "Everything you need before you speak to sales" 6-item grid */}
-        <WhatYouGetSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 4: Dense 2x2 Project Scale Section (14.6 Acres, 5M+ Sq.Ft., ₹6,000 Cr, Prestige Group) */}
-        <ScaleSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 5: Price Reveal Component with Partially Obscured Cost Worksheet */}
-        <PriceRevealSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 6: Interactive Configuration Selector (2 Bed, 3 Bed, 4 Bed) */}
-        <ConfigurationSelectorSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 7: Architectural Floor Plan Curiosity Section with 3 locked tiles */}
-        <FloorPlanCuriositySection onOpenModal={handleOpenModal} />
-
-        {/* Screen 8: Location Section with Map Visual & Locked Location Intelligence Report */}
-        <LocationSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 9: "Why this launch is on the radar" compact editorial reasons */}
-        <WhyOnTheRadarSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 10: "Before you buy, know more" Strategic Dark Contrast Section (EstateWise advantage) */}
-        <BeforeYouBuySection onOpenModal={handleOpenModal} />
-
-        {/* Screen 11: Project Status Component (Confirmed, Indicative, Awaited) */}
-        <ProjectStatusSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 12: Low-Pressure "Don't want a sales call yet?" Project Update Access */}
-        <ProjectUpdateAccessSection onOpenModal={handleOpenModal} />
-
-        {/* Screen 13: High-Intent FAQ */}
-        <FaqSection />
-
-        {/* Screen 14: Final Conversion Section ("You've seen the overview. Now get the numbers.") */}
-        <FinalConversionSection onOpenModal={handleOpenModal} />
-      </main>
-
-      {/* Advisory Disclaimer & Minimal Footer */}
-      <DisclaimerFooter />
-
-      {/* Dynamic Sticky Mobile Bottom Conversion Bar */}
-      <StickyMobileBar
-        onOpenModal={handleOpenModal}
-        personalizedTerm={personalizedTerm}
-      />
-
-      {/* Small Floating Value Reminder (~35% scroll depth) & Desktop Exit Intent */}
-      <ExitIntentNotice onOpenModal={handleOpenModal} />
-
-      {/* The Unlock Experience Lead Capture Bottom Sheet & Modal */}
-      <LeadModal
-        isOpen={modalOpen}
-        onClose={handleCloseModal}
-        leadIntent={leadIntent}
-        sourceSection={sourceSection}
-        leadConfiguration={leadConfiguration}
-      />
+  const label = intent === 'price' ? 'pricing update' : intent === 'master_plan' ? 'master plan' : intent === 'floor_plan' ? 'floor plans' : intent === 'video' ? 'project film' : 'project details';
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    const digits = phone.replace(/\D/g, '');
+    const phoneE164 = digits.length === 10 ? `+91${digits}` : digits.length === 12 && digits.startsWith('91') ? `+${digits}` : '';
+    if (name.trim().length < 2 || !/^\+91[6-9]\d{9}$/.test(phoneE164)) { setError('Enter your name and a valid Indian mobile number.'); return; }
+    setPending(true);
+    try {
+      const url = new URLSearchParams(location.search);
+      const attribution = Object.fromEntries(['utmSource', 'utmMedium', 'utmCampaign', 'utmTerm', 'utmContent', 'gclid'].map(key => [key, (url.get(key.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`)) || '').slice(0, 120)]));
+      const response = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        name: name.trim(), phoneE164, intent, assetId: intent === 'callback' ? undefined : intent,
+        sourceSection, attribution,
+        consent: { noticeVersion: 'preview-v1', capturedAt: new Date().toISOString(), whatsappOptIn },
+      }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(response.status === 503 ? 'Enquiries are not yet available. Please try again after the campaign contact is connected.' : (typeof data.error?.message === 'string' ? data.error.message : 'We could not save your request. Please try again.'));
+      if (data.asset?.status === 'available' && typeof data.asset.accessUrl === 'string' && data.asset.accessUrl.startsWith('/api/assets/')) {
+        setResult('saved');
+        window.open(data.asset.accessUrl, '_blank', 'noopener,noreferrer');
+      } else setResult('saved');
+    } catch (cause) { setResult('unavailable'); setError(cause instanceof Error ? cause.message : 'We could not save your request. Please try again.'); }
+    finally { setPending(false); }
+  }
+  return <div className="dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="request-dialog" role="dialog" aria-modal="true" aria-labelledby="request-title">
+      <button className="dialog-close" type="button" onClick={onClose} aria-label="Close form"><X size={21}/></button>
+      {result === 'saved' ? <div className="request-result" role="status"><span className="eyebrow">Request recorded</span><h2 id="request-title">Thank you, {name.trim().split(' ')[0]}.</h2><p>This preview saved your enquiry for development testing only. Approved {label} is not available yet. No document or WhatsApp message was sent.</p><button className="button dark" onClick={onClose}>Close <ArrowRight size={16}/></button></div> : <>
+        <span className="eyebrow">YOUR PROJECT ENQUIRY</span><h2 id="request-title">The details, when ready.</h2>
+        <p className="dialog-intro">Request an update about {label}. Approved files and the campaign contact are still pending.</p>
+        <form onSubmit={submit} noValidate><label htmlFor="lead-name">Your name</label><input ref={firstInput} id="lead-name" name="name" value={name} onChange={e => setName(e.target.value)} placeholder="Full name" autoComplete="name" required maxLength={90}/><label htmlFor="lead-phone">Mobile number</label><input id="lead-phone" name="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91  Your mobile number" type="tel" inputMode="tel" autoComplete="tel" required maxLength={16}/>
+          <p className="form-notice">Use this number only to respond to this project enquiry. Campaign privacy information is pending approval.</p>
+          <label className="check-row"><input type="checkbox" checked={whatsappOptIn} onChange={e => setWhatsappOptIn(e.target.checked)} /><span>Optional: contact me by WhatsApp when this channel is available.</span></label>
+          {error && <p className="form-error" role="alert">{error}</p>}
+          <button className="button gold submit-button" type="submit" disabled={pending}>{pending ? 'Sending request…' : 'Request update'} <ArrowRight size={17}/></button>
+        </form><p className="form-small">Preview only. No approved project file or production lead destination is connected.</p>
+      </>}
     </div>
-  );
+  </div>;
+}
+
+export default function App() {
+  const [intent, setIntent] = useState<Intent | null>(null);
+  const [sourceSection, setSourceSection] = useState('hero');
+  const [showSticky, setShowSticky] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [category, setCategory] = useState<'amenities' | 'facilities'>('amenities');
+  const [slide, setSlide] = useState(0);
+  const [whatsappNotice, setWhatsappNotice] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(([entry]) => setShowSticky(!entry.isIntersecting), { threshold: 0 });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+    const observer = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+  const current = interests[category];
+  const open = (value: Intent, source: string) => { setWhatsappNotice(false); setSourceSection(source); setIntent(value); };
+  const chat = () => { setWhatsappNotice(true); window.setTimeout(() => setWhatsappNotice(false), 6500); };
+  return <div className="landing">
+    <header className="site-header"><a className="brand" href="#top" aria-label="Prestige Falcon City Thane, return to top"><span className="brand-name">PRESTIGE</span><span className="brand-sub">FALCON CITY <i/> THANE</span><small>Brand mark pending approval</small></a>
+      <nav className={menuOpen ? 'site-nav open' : 'site-nav'} aria-label="Page navigation"><a onClick={() => setMenuOpen(false)} href="#details">Explore</a><a onClick={() => setMenuOpen(false)} href="#amenities">Experience</a><a onClick={() => setMenuOpen(false)} href="#location">Location</a><button className="button dark nav-action" onClick={() => open('callback', 'header')}>Enquire <ArrowRight size={16}/></button></nav>
+      <button className="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button>
+    </header>
+    <main id="top">
+      <section className="hero" ref={heroRef} aria-label="Prestige Falcon City Thane"><img className="hero-image" src={heroImage} alt="Illustrative residential architecture; not a rendering of this project" fetchPriority="high"/><div className="hero-shade"/><div className="hero-content"><p className="hero-kicker">THANE · A NEW PERSPECTIVE</p><h1>Something worth<br/><em>looking closer at.</em></h1><p>Prestige Falcon City Thane</p></div><div className="hero-disclaimer">Illustrative image · Not an actual project rendering</div><a className="hero-scroll" href="#details" aria-label="Explore project details"><ArrowDown size={19}/></a></section>
+      <div className="cta-trio" aria-label="Quick actions"><button onClick={() => open('price', 'hero_price')}><span className="cta-number">01</span><span>Get latest price<small>Request a verified update</small></span><ArrowRight size={19}/></button><button onClick={() => open('floor_plan', 'hero_plans')}><span className="cta-number">02</span><span>View plans & brochure<small>See what's coming</small></span><ArrowRight size={19}/></button><button onClick={chat}><span className="cta-number">03</span><span>Chat on WhatsApp<small>Number pending approval</small></span><ArrowRight size={19}/></button></div>
+      {whatsappNotice && <div className="channel-notice" role="status">The campaign WhatsApp number is not connected yet. Please use the enquiry form for development testing.</div>}
+      <section className="intro-section" id="details"><div className="section-top"><div><span className="eyebrow">A CLOSER LOOK</span><h2>See what is <em>taking shape.</em></h2></div><p>Explore a preview of the information that matters. Approved project materials will replace these samples.</p></div><div className="document-grid">{cards.map(card => <article className="document-card" key={card.intent}><PreviewArt kind={card.visual}/><div className="card-content"><span className="eyebrow">{card.eyebrow}</span><h3>{card.title}</h3><p>Illustrative preview · Approved material pending</p><button onClick={() => open(card.intent, `preview_${card.intent}`)} aria-label={`${card.action}; approved material pending`}><LockKeyhole size={14}/>{card.action}<ArrowRight size={17}/></button></div></article>)}</div><p className="section-footnote">These are samples, not project documents. Full-size files and pricing are not publicly available.</p></section>
+      <section className="experience-section" id="amenities"><div className="experience-heading"><div><span className="eyebrow">THE EXPERIENCE</span><h2>More room for <em>possibility.</em></h2><p>Illustrative themes. The approved list of amenities and facilities is pending.</p></div><div className="carousel-controls"><button aria-label="Previous feature" onClick={() => setSlide((slide - 1 + current.length) % current.length)}><ChevronLeft size={21}/></button><button aria-label="Next feature" onClick={() => setSlide((slide + 1) % current.length)}><ChevronRight size={21}/></button></div></div><div className="experience-tabs" role="tablist" aria-label="Explore features">{(['amenities', 'facilities'] as const).map(tab => <button key={tab} role="tab" aria-selected={category === tab} onClick={() => { setCategory(tab); setSlide(0); }}>{tab === 'amenities' ? 'Amenities' : 'Facilities'}<span>0{tab === 'amenities' ? '1' : '2'}</span></button>)}</div><div className="experience-gallery" role="tabpanel" aria-live="polite"><div className={`experience-photo ${current[slide].style}`}><span className="photo-number">0{slide+1} / 0{current.length}</span><span className="photo-disclaimer">Illustrative concept, not a project amenity</span></div><div className="experience-caption"><span className="eyebrow">{category.toUpperCase()} · 0{slide+1}</span><h3>{current[slide].name}</h3><p>{current[slide].detail}. Verified facilities and photographs will follow the approved project pack.</p><div className="slide-dots" aria-label="Choose feature">{current.map((item, index) => <button key={item.name} aria-label={`Show feature ${index+1}`} aria-current={index === slide ? 'true' : undefined} onClick={() => setSlide(index)}/>)}</div></div></div></section>
+      <LocationExperience/>
+      <section className="closing-section" id="enquire" ref={footerRef}><span className="eyebrow">STAY CLOSE TO THE DETAILS</span><h2>Know more, <em>when it is ready.</em></h2><p>Request a project update. Approved pricing, plans and film will appear only after release.</p><button className="button gold" onClick={() => open('callback', 'footer')}>Request an update <ArrowRight size={18}/></button></section>
+    </main>
+    <footer className="site-footer"><div><strong>PRESTIGE</strong><span>FALCON CITY · THANE</span></div><p>{notice} Project information, original logo, statutory details and privacy text await campaign approval. This preview does not offer released pricing or documents.</p><a href="#top">Back to top ↑</a></footer>
+    {showSticky && !footerVisible && !intent && <div className="sticky-actions"><span>Explore the details</span><button className="button gold" onClick={() => open('price', 'sticky')}>Get price update <ArrowRight className="sticky-arrow" size={18}/></button><button className="sticky-chat" onClick={chat} aria-label="WhatsApp availability">WhatsApp</button></div>}
+    {intent && <RequestDialog intent={intent} sourceSection={sourceSection} onClose={() => setIntent(null)}/>}<span className="sr-only">{whatsappNotice ? 'WhatsApp is not yet available' : ''}</span>
+  </div>;
 }
