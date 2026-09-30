@@ -43,6 +43,22 @@ test("makes a new retry identity when details or consent change", () => {
   assert.equal(JSON.parse(changed.body).consent.whatsappOptIn, true);
 });
 
+test("renews expired requests while keeping retries inside the consent window stable", () => {
+  const start = Date.parse("2026-09-30T09:00:00.000Z");
+  const day = 24 * 60 * 60 * 1000;
+  const original = prepareRequest(enquiry, null, start);
+  assert.equal(prepareRequest(enquiry, original, start + day - 1), original);
+  for (const time of [start + day, start + day + 60_000]) {
+    const renewed = prepareRequest(enquiry, original, time);
+    assert.notEqual(renewed.key, original.key);
+    assert.equal(
+      JSON.parse(renewed.body).consent.capturedAt,
+      new Date(time).toISOString(),
+    );
+    assert.equal(prepareRequest(enquiry, renewed, time + 1_000), renewed);
+  }
+});
+
 test("only an explicit accepted-lead response confirms capture", () => {
   const valid = {
     status: "accepted",

@@ -18,21 +18,34 @@ type Enquiry = {
   attribution: Record<string, string>;
   consent: { noticeVersion: string; whatsappOptIn: boolean };
 };
-export type RetryRequest = { signature: string; key: string; body: string };
+export type RetryRequest = {
+  signature: string;
+  key: string;
+  body: string;
+  createdAt: number;
+};
+const CONSENT_VALIDITY_MS = 24 * 60 * 60 * 1000;
 
 // The same enquiry keeps its key AND consent timestamp if the response is lost.
 export function prepareRequest(
   enquiry: Enquiry,
   previous: RetryRequest | null,
+  now = Date.now(),
 ): RetryRequest {
   const signature = JSON.stringify(enquiry);
-  if (previous?.signature === signature) return previous;
+  if (
+    previous?.signature === signature &&
+    now >= previous.createdAt &&
+    now - previous.createdAt < CONSENT_VALIDITY_MS
+  )
+    return previous;
   return {
     signature,
     key: crypto.randomUUID(),
+    createdAt: now,
     body: JSON.stringify({
       ...enquiry,
-      consent: { ...enquiry.consent, capturedAt: new Date().toISOString() },
+      consent: { ...enquiry.consent, capturedAt: new Date(now).toISOString() },
     }),
   };
 }
