@@ -13,14 +13,10 @@ import { LocationExperience } from "./components/LocationExperience";
 import heroImage from "./assets/images/temporary-illustrative-exterior.jpg";
 import "./landing.css";
 import { trackCampaignEvent } from "./utils/campaignAnalytics";
-import {
-  isAcceptedResponse,
-  normalizePhone,
-  prepareRequest,
-  type RetryRequest,
-} from "./utils/leadRequest";
+import { useLeadEnquiry, type EnquiryIntent } from "./utils/useLeadEnquiry";
+import { InlineEnquiryForm } from "./components/InlineEnquiryForm";
 
-type Intent = "price" | "master_plan" | "floor_plan" | "video" | "callback";
+type Intent = EnquiryIntent;
 type Card = {
   intent: Intent;
   title: string;
@@ -182,26 +178,14 @@ function RequestDialog({
   onClose: () => void;
   returnFocus: HTMLElement | null;
 }) {
-  const localPreview = ["localhost", "127.0.0.1"].includes(
-    window.location.hostname,
-  );
-  // Keep public previews non-collecting until a destination and privacy notice are approved.
-  const formAvailable =
-    (localPreview &&
-      import.meta.env.DEV &&
-      import.meta.env.VITE_PRIVATE_LOCAL_PREVIEW === true) ||
-    (import.meta.env.PROD && import.meta.env.VITE_LEAD_FORM_READY === "true");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    formAvailable, name, setName, phone, setPhone,
+    whatsappOptIn, setWhatsappOptIn, pending, saved, error,
+    markStarted, submit,
+  } = useLeadEnquiry(intent, sourceSection);
   const firstInput = useRef<HTMLInputElement>(null);
   const resultClose = useRef<HTMLButtonElement>(null);
   const focusTask = useRef<number | null>(null);
-  const retryRequest = useRef<RetryRequest | null>(null);
-  const started = useRef(false);
   useEffect(() => {
     if (saved) resultClose.current?.focus();
   }, [saved]);
@@ -261,101 +245,6 @@ function RequestDialog({
           : intent === "video"
             ? "project film"
             : "project details";
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    if (!formAvailable || pending) return;
-    const phoneE164 = normalizePhone(phone);
-    if (name.trim().length < 2 || !phoneE164) {
-      setError("Enter your name and a valid Indian mobile number.");
-      trackCampaignEvent("form_validation_error", {
-        intent,
-        source: sourceSection,
-      });
-      return;
-    }
-    setPending(true);
-    try {
-      const url = new URLSearchParams(location.search);
-      const attribution = Object.fromEntries(
-        [
-          "utmSource",
-          "utmMedium",
-          "utmCampaign",
-          "utmTerm",
-          "utmContent",
-          "gclid",
-        ].map((key) => [
-          key,
-          (
-            url.get(key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)) || ""
-          ).slice(0, 120),
-        ]),
-      );
-      retryRequest.current = prepareRequest(
-        {
-          name: name.trim(),
-          phoneE164,
-          intent,
-          assetId: intent === "callback" ? undefined : intent,
-          sourceSection,
-          attribution,
-          consent: {
-            noticeVersion: "preview-v1",
-            whatsappOptIn,
-          },
-        },
-        retryRequest.current,
-      );
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": retryRequest.current.key,
-        },
-        body: retryRequest.current.body,
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok)
-        throw new Error(
-          response.status === 503
-            ? "Enquiries are not yet available. Please try again after the campaign contact is connected."
-            : typeof data.error?.message === "string"
-              ? data.error.message
-              : "We could not save your request. Please try again.",
-        );
-      // Static hosts may answer unknown /api paths with an HTTP 200 HTML fallback.
-      if (!isAcceptedResponse(response.status, data)) {
-        throw new Error(
-          "Enquiries are not yet available. Please try again after the campaign contact is connected.",
-        );
-      }
-      if (
-        data.asset.status === "available" &&
-        typeof data.asset.accessUrl === "string" &&
-        data.asset.accessUrl.startsWith("/api/assets/")
-      ) {
-        window.open(data.asset.accessUrl, "_blank", "noopener,noreferrer");
-      }
-      setSaved(true);
-      trackCampaignEvent(
-        localPreview ? "development_lead_saved" : "lead_success",
-        { intent, source: sourceSection },
-      );
-    } catch (cause) {
-      trackCampaignEvent("lead_request_failed", {
-        intent,
-        source: sourceSection,
-      });
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "We could not save your request. Please try again.",
-      );
-    } finally {
-      setPending(false);
-    }
-  }
   return (
     <div
       className="dialog-backdrop"
@@ -413,15 +302,7 @@ function RequestDialog({
             </p>
             <form
               onSubmit={submit}
-              onChange={() => {
-                if (!started.current) {
-                  started.current = true;
-                  trackCampaignEvent("form_start", {
-                    intent,
-                    source: sourceSection,
-                  });
-                }
-              }}
+              onChange={markStarted}
               noValidate
             >
               <label htmlFor="lead-name">Your name</label>
@@ -494,6 +375,7 @@ export default function App() {
   const [sourceSection, setSourceSection] = useState("hero");
   const [showSticky, setShowSticky] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
+  const [inlineFocused, setInlineFocused] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [category, setCategory] = useState<"amenities" | "facilities">(
     "amenities",
@@ -654,6 +536,16 @@ export default function App() {
             <ArrowRight size={19} />
           </button>
         </div>
+        <section className="registration-section" aria-labelledby="registration-heading">
+          <div className="registration-card">
+            <h2 id="registration-heading">Pre-register for benefits</h2>
+            <InlineEnquiryForm
+              sourceSection="hero_registration"
+              action="Express your interest"
+              onFocusChange={setInlineFocused}
+            />
+          </div>
+        </section>
         {whatsappNotice && (
           <div className="channel-notice" role="status">
             The campaign WhatsApp number is not connected yet. Please use the
@@ -823,21 +715,28 @@ export default function App() {
           </div>
         </section>
         <LocationExperience />
-        <section className="closing-section" id="enquire" ref={footerRef}>
-          <span className="eyebrow">STAY CLOSE TO THE DETAILS</span>
-          <h2>
-            Know more, <em>when it is ready.</em>
-          </h2>
-          <p>
-            Request a project update. Approved pricing, plans and film will
-            appear only after release.
-          </p>
-          <button
-            className="button gold"
-            onClick={() => open("callback", "footer")}
-          >
-            Request an update <ArrowRight size={18} />
-          </button>
+        <section className="closing-section" id="enquire" ref={footerRef} aria-labelledby="visit-heading">
+          <div className="visit-card">
+            <div className="visit-image">
+              <img
+                src={heroImage}
+                width={1600}
+                height={779}
+                loading="lazy"
+                alt="Illustrative residential architecture; not a photograph of this project site"
+              />
+              <p>Illustrative image · Not an actual project rendering</p>
+            </div>
+            <div className="visit-content">
+              <span className="eyebrow">SEE IT FOR YOURSELF</span>
+              <h2 id="visit-heading">Request a <em>site visit.</em></h2>
+              <InlineEnquiryForm
+                sourceSection="final_site_visit"
+                action="Request a site visit"
+                onFocusChange={setInlineFocused}
+              />
+            </div>
+          </div>
         </section>
       </main>
       <footer className="site-footer">
@@ -852,7 +751,7 @@ export default function App() {
         </p>
         <a href="#top">Back to top ↑</a>
       </footer>
-      {showSticky && !footerVisible && !intent && (
+      {showSticky && !footerVisible && !intent && !inlineFocused && (
         <div className="sticky-actions">
           <span>Explore the details</span>
           <button

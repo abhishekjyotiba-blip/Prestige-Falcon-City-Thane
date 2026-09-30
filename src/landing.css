@@ -575,24 +575,143 @@ body {
 .slide-dots button[aria-current="true"] {
   background: #a98f5c;
 }
-.closing-section {
-  background: #202922;
-  color: #fff;
-  padding: 100px 24px;
-  text-align: center;
+.registration-section {
+  padding: 28px max(5.2vw, 24px) 0;
 }
-.closing-section h2 {
-  margin-bottom: 22px;
+.registration-card {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  background: var(--paper);
 }
-.closing-section .eyebrow {
-  color: #dfc391;
+.registration-card h2 {
+  margin: 0 0 18px;
+  font-size: 32px;
+  line-height: 1.15;
 }
-.closing-section p {
-  color: #d4d7cd;
+.inline-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 14px;
+}
+.inline-field {
+  min-width: 0;
+}
+.inline-field label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.inline-field input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-size: 16px;
+}
+.inline-fields .button {
+  min-height: 48px;
+}
+.inline-enquiry input:disabled {
+  background: #f0ede5;
+  color: #72776c;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.inline-enquiry .button:disabled {
+  color: #4f5147;
+  background: #d4c4a6;
+  cursor: not-allowed;
+  transform: none;
+}
+.cta-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  color: #555e53;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.cta-benefits li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cta-benefits svg {
+  flex-shrink: 0;
+  color: #897044;
+}
+.inline-enquiry .form-notice {
+  margin: 12px 0 0;
+}
+.inline-result {
+  margin: 0;
+  padding: 18px;
+  background: #e8edde;
   font-size: 13px;
-  line-height: 1.7;
-  margin: 0 auto 30px;
-  max-width: 500px;
+  line-height: 1.6;
+}
+.closing-section {
+  padding: 80px max(5.2vw, 24px);
+  background: #202922;
+}
+.visit-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--paper);
+}
+.visit-image {
+  position: relative;
+  min-height: 460px;
+}
+.visit-image img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 45% center;
+}
+.visit-image p {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  width: fit-content;
+  margin: 0;
+  padding: 7px 9px;
+  background: #faf8f3ed;
+  color: var(--ink);
+  font-size: 9px;
+  line-height: 1.5;
+}
+.visit-content {
+  padding: 44px 36px;
+  align-self: center;
+  min-width: 0;
+}
+.visit-content h2 {
+  margin: 13px 0 26px;
+  font-size: 46px;
+  line-height: 1.1;
+}
+.visit-content .inline-fields {
+  grid-template-columns: 1fr;
+}
+.visit-content .cta-benefits {
+  gap: 12px 20px;
 }
 .site-footer {
   display: flex;
@@ -763,6 +882,16 @@ body {
   }
 }
 @media (max-width: 1020px) {
+  .registration-card .inline-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .registration-card .inline-fields .button {
+    grid-column: 1 / -1;
+  }
+  .visit-content {
+    padding: 32px 24px;
+  }
+
   .document-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -774,6 +903,43 @@ body {
   }
 }
 @media (max-width: 700px) {
+  .registration-section {
+    padding: 22px 18px 0;
+  }
+  .registration-card {
+    padding: 20px 18px;
+  }
+  .registration-card h2 {
+    font-size: 23px;
+    margin-bottom: 16px;
+  }
+  .registration-card .inline-fields {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .cta-benefits {
+    gap: 10px 16px;
+    font-size: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+  .closing-section {
+    padding: 44px 18px;
+  }
+  .visit-card {
+    grid-template-columns: 1fr;
+  }
+  .visit-image {
+    min-height: 220px;
+  }
+  .visit-content {
+    padding: 28px 22px;
+  }
+  .closing-section .visit-content h2 {
+    font-size: 38px;
+    margin-bottom: 24px;
+  }
+
   .site-header {
     height: 70px;
     padding: 0 18px;
