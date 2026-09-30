@@ -12,6 +12,13 @@ import {
 import { LocationExperience } from "./components/LocationExperience";
 import heroImage from "./assets/images/temporary-illustrative-exterior.jpg";
 import "./landing.css";
+import { trackCampaignEvent } from "./utils/campaignAnalytics";
+import {
+  isAcceptedResponse,
+  normalizePhone,
+  prepareRequest,
+  type RetryRequest,
+} from "./utils/leadRequest";
 
 type Intent = "price" | "master_plan" | "floor_plan" | "video" | "callback";
 type Card = {
@@ -180,7 +187,10 @@ function RequestDialog({
   );
   // Keep public previews non-collecting until a destination and privacy notice are approved.
   const formAvailable =
-    localPreview || import.meta.env.VITE_LEAD_FORM_READY === "true";
+    (localPreview &&
+      import.meta.env.DEV &&
+      import.meta.env.VITE_PRIVATE_LOCAL_PREVIEW === true) ||
+    (import.meta.env.PROD && import.meta.env.VITE_LEAD_FORM_READY === "true");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [whatsappOptIn, setWhatsappOptIn] = useState(false);
@@ -189,14 +199,20 @@ function RequestDialog({
   const [error, setError] = useState("");
   const firstInput = useRef<HTMLInputElement>(null);
   const resultClose = useRef<HTMLButtonElement>(null);
+  const focusTask = useRef<number | null>(null);
+  const retryRequest = useRef<RetryRequest | null>(null);
+  const started = useRef(false);
   useEffect(() => {
     if (saved) resultClose.current?.focus();
   }, [saved]);
   useEffect(() => {
+    if (focusTask.current !== null) cancelAnimationFrame(focusTask.current);
     const before = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    if (formAvailable) firstInput.current?.focus();
-    else resultClose.current?.focus();
+    focusTask.current = requestAnimationFrame(() => {
+      if (formAvailable) firstInput.current?.focus();
+      else resultClose.current?.focus();
+    });
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
       if (event.key === "Tab") {
@@ -206,7 +222,10 @@ function RequestDialog({
           ),
         ];
         const index = elements.indexOf(document.activeElement as HTMLElement);
-        if (event.shiftKey && index === 0) {
+        if (index === -1) {
+          event.preventDefault();
+          elements[0]?.focus();
+        } else if (event.shiftKey && index === 0) {
           event.preventDefault();
           elements.at(-1)?.focus();
         } else if (!event.shiftKey && index === elements.length - 1) {
@@ -219,7 +238,8 @@ function RequestDialog({
     return () => {
       document.body.style.overflow = before;
       document.removeEventListener("keydown", onKeyDown);
-      requestAnimationFrame(() => {
+      if (focusTask.current !== null) cancelAnimationFrame(focusTask.current);
+      focusTask.current = requestAnimationFrame(() => {
         if (returnFocus?.isConnected) returnFocus.focus();
         else {
           const fallback = window.matchMedia("(max-width: 700px)").matches
@@ -244,15 +264,14 @@ function RequestDialog({
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    const digits = phone.replace(/\D/g, "");
-    const phoneE164 =
-      digits.length === 10
-        ? `+91${digits}`
-        : digits.length === 12 && digits.startsWith("91")
-          ? `+${digits}`
-          : "";
-    if (name.trim().length < 2 || !/^\+91[6-9]\d{9}$/.test(phoneE164)) {
+    if (!formAvailable || pending) return;
+    const phoneE164 = normalizePhone(phone);
+    if (name.trim().length < 2 || !phoneE164) {
       setError("Enter your name and a valid Indian mobile number.");
+      trackCampaignEvent("form_validation_error", {
+        intent,
+        source: sourceSection,
+      });
       return;
     }
     setPending(true);
@@ -273,10 +292,8 @@ function RequestDialog({
           ).slice(0, 120),
         ]),
       );
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      retryRequest.current = prepareRequest(
+        {
           name: name.trim(),
           phoneE164,
           intent,
@@ -285,10 +302,18 @@ function RequestDialog({
           attribution,
           consent: {
             noticeVersion: "preview-v1",
-            capturedAt: new Date().toISOString(),
             whatsappOptIn,
           },
-        }),
+        },
+        retryRequest.current,
+      );
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": retryRequest.current.key,
+        },
+        body: retryRequest.current.body,
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok)
@@ -300,13 +325,7 @@ function RequestDialog({
               : "We could not save your request. Please try again.",
         );
       // Static hosts may answer unknown /api paths with an HTTP 200 HTML fallback.
-      if (
-        response.status !== 202 ||
-        data.status !== "accepted" ||
-        typeof data.leadId !== "string" ||
-        !data.asset ||
-        (data.asset.status !== "upcoming" && data.asset.status !== "available")
-      ) {
+      if (!isAcceptedResponse(response.status, data)) {
         throw new Error(
           "Enquiries are not yet available. Please try again after the campaign contact is connected.",
         );
@@ -319,7 +338,15 @@ function RequestDialog({
         window.open(data.asset.accessUrl, "_blank", "noopener,noreferrer");
       }
       setSaved(true);
+      trackCampaignEvent(
+        localPreview ? "development_lead_saved" : "lead_success",
+        { intent, source: sourceSection },
+      );
     } catch (cause) {
+      trackCampaignEvent("lead_request_failed", {
+        intent,
+        source: sourceSection,
+      });
       setError(
         cause instanceof Error
           ? cause.message
@@ -384,7 +411,19 @@ function RequestDialog({
               Request an update about {label}. Approved files and the campaign
               contact are still pending.
             </p>
-            <form onSubmit={submit} noValidate>
+            <form
+              onSubmit={submit}
+              onChange={() => {
+                if (!started.current) {
+                  started.current = true;
+                  trackCampaignEvent("form_start", {
+                    intent,
+                    source: sourceSection,
+                  });
+                }
+              }}
+              noValidate
+            >
               <label htmlFor="lead-name">Your name</label>
               <input
                 ref={firstInput}
@@ -465,6 +504,23 @@ export default function App() {
   const footerRef = useRef<HTMLElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const scrollMilestones = useRef(new Set<number>());
+  useEffect(() => {
+    const onScroll = () => {
+      const available =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (available <= 0) return;
+      const percent = (window.scrollY / available) * 100;
+      for (const depth of [25, 50, 75, 90]) {
+        if (percent >= depth && !scrollMilestones.current.has(depth)) {
+          scrollMilestones.current.add(depth);
+          trackCampaignEvent("scroll_depth", { depth });
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -486,6 +542,8 @@ export default function App() {
   }, []);
   const current = interests[category];
   const open = (value: Intent, source: string) => {
+    trackCampaignEvent("cta_click", { intent: value, source });
+    trackCampaignEvent("form_open", { intent: value, source });
     openerRef.current = document.activeElement as HTMLElement | null;
     setWhatsappNotice(false);
     setSourceSection(source);
@@ -493,6 +551,7 @@ export default function App() {
   };
   const close = useCallback(() => setIntent(null), []);
   const chat = () => {
+    trackCampaignEvent("cta_click", { source: "whatsapp_pending" });
     setWhatsappNotice(true);
     window.setTimeout(() => setWhatsappNotice(false), 6500);
   };
@@ -676,8 +735,31 @@ export default function App() {
             {(["amenities", "facilities"] as const).map((tab) => (
               <button
                 key={tab}
+                id={`feature-tab-${tab}`}
                 role="tab"
                 aria-selected={category === tab}
+                aria-controls="feature-panel"
+                tabIndex={category === tab ? 0 : -1}
+                onKeyDown={(event) => {
+                  if (
+                    !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                      event.key,
+                    )
+                  )
+                    return;
+                  event.preventDefault();
+                  const next =
+                    event.key === "Home"
+                      ? "amenities"
+                      : event.key === "End"
+                        ? "facilities"
+                        : category === "amenities"
+                          ? "facilities"
+                          : "amenities";
+                  setCategory(next);
+                  setSlide(0);
+                  document.getElementById(`feature-tab-${next}`)?.focus();
+                }}
                 onClick={() => {
                   setCategory(tab);
                   setSlide(0);
@@ -690,7 +772,9 @@ export default function App() {
           </div>
           <div
             className="experience-gallery"
+            id="feature-panel"
             role="tabpanel"
+            aria-labelledby={`feature-tab-${category}`}
             aria-live="polite"
             onTouchStart={(event) => {
               touchStartX.current = event.touches[0]?.clientX ?? null;
