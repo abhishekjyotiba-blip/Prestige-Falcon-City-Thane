@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { LocationExperience } from "./components/LocationExperience";
+import { AmenitiesOverview } from "./components/AmenitiesOverview";
 import heroImage from "./assets/images/temporary-illustrative-exterior.jpg";
 import "./landing.css";
 import { trackCampaignEvent } from "./utils/campaignAnalytics";
@@ -729,6 +730,7 @@ export default function App() {
             </div>
           </div>
         </section>
+        <AmenitiesOverview />
         <LocationExperience />
         <section className="closing-section" id="enquire" ref={footerRef} aria-labelledby="visit-heading">
           <div className="visit-card">

@@ -1,0 +1,102 @@
+.amenities-overview {
+  padding: 56px max(5.2vw, 24px);
+  background: #f5f2ea;
+  color: #1c221f;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.amenities-overview__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.amenities-overview h2 {
+  margin: 0 0 18px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  overflow-wrap: anywhere;
+}
+
+.amenities-overview__notice {
+  margin: 0;
+  color: #625e57;
+  font-size: .8125rem;
+  line-height: 1.5;
+}
+
+.amenities-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 0;
+  margin: 26px 0 0;
+  list-style: none;
+}
+
+.amenities-overview__grid li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 120px;
+  gap: 14px;
+  padding: 14px 8px;
+  border-right: 1px solid #dcd6c9;
+  text-align: center;
+  font-size: .875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.amenities-overview__grid li:nth-child(5n) {
+  border-right: 0;
+}
+
+.amenities-overview__grid svg {
+  flex-shrink: 0;
+  color: #816c45;
+}
+
+@media (max-width: 700px) {
+  .amenities-overview {
+    padding: 32px 16px;
+  }
+
+  .amenities-overview__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 20px;
+  }
+
+  .amenities-overview__grid li {
+    min-height: 94px;
+    gap: 10px;
+    padding: 12px 7px;
+    font-size: .8125rem;
+  }
+
+  .amenities-overview__grid li:nth-child(5n) {
+    border-right: 1px solid #dcd6c9;
+  }
+
+  .amenities-overview__grid li:nth-child(3n),
+  .amenities-overview__grid li:last-child {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 359px) {
+  .amenities-overview__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .amenities-overview__grid li:nth-child(3n) {
+    border-right: 1px solid #dcd6c9;
+  }
+
+  .amenities-overview__grid li:nth-child(2n) {
+    border-right: 0;
+  }
+}
