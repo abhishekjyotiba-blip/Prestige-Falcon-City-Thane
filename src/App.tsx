@@ -375,7 +375,10 @@ export default function App() {
   const [sourceSection, setSourceSection] = useState("hero");
   const [showSticky, setShowSticky] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
-  const [inlineFocused, setInlineFocused] = useState(false);
+  const [registrationVisible, setRegistrationVisible] = useState(false);
+  const [inlineFocused, setInlineFocused] = useState<
+    "hero_registration" | "final_site_visit" | null
+  >(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [category, setCategory] = useState<"amenities" | "facilities">(
     "amenities",
@@ -383,6 +386,7 @@ export default function App() {
   const [slide, setSlide] = useState(0);
   const [whatsappNotice, setWhatsappNotice] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
+  const registrationRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -411,6 +415,15 @@ export default function App() {
       { threshold: 0 },
     );
     observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const registration = registrationRef.current;
+    if (!registration) return;
+    const observer = new IntersectionObserver(([entry]) =>
+      setRegistrationVisible(entry.isIntersecting),
+    );
+    observer.observe(registration);
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
@@ -536,13 +549,15 @@ export default function App() {
             <ArrowRight size={19} />
           </button>
         </div>
-        <section className="registration-section" aria-labelledby="registration-heading">
+        <section className="registration-section" ref={registrationRef} aria-labelledby="registration-heading">
           <div className="registration-card">
             <h2 id="registration-heading">Pre-register for benefits</h2>
             <InlineEnquiryForm
               sourceSection="hero_registration"
               action="Express your interest"
-              onFocusChange={setInlineFocused}
+              onFocusChange={(focused) =>
+                setInlineFocused(focused ? "hero_registration" : null)
+              }
             />
           </div>
         </section>
@@ -733,7 +748,9 @@ export default function App() {
               <InlineEnquiryForm
                 sourceSection="final_site_visit"
                 action="Request a site visit"
-                onFocusChange={setInlineFocused}
+                onFocusChange={(focused) =>
+                  setInlineFocused(focused ? "final_site_visit" : null)
+                }
               />
             </div>
           </div>
@@ -751,7 +768,8 @@ export default function App() {
         </p>
         <a href="#top">Back to top ↑</a>
       </footer>
-      {showSticky && !footerVisible && !intent && !inlineFocused && (
+      {showSticky && !footerVisible && !intent &&
+        !(inlineFocused === "hero_registration" && registrationVisible) && (
         <div className="sticky-actions">
           <span>Explore the details</span>
           <button
