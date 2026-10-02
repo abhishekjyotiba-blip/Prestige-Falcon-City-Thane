@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CAMPAIGN_PROJECT_IDENTITY, PROJECT_GALLERY_IMAGES, ILLUSTRATIVE_GALLERY_FALLBACK, type ProjectMediaRecord } from "../data/projectMedia";
-import { canRotateGallery, eligibleGalleryImages, galleryIndex, isEligibleGalleryImage, nextGalleryIndex, type GalleryRotationState } from "./galleryState";
+import { canRotateGallery, eligibleGalleryImages, galleryIndex, galleryRotationAction, isEligibleGalleryImage, nextGalleryIndex, type GalleryRotationState } from "./galleryState";
 
 // Synthetic records only, never bundled as live campaign media.
 const fixture = (id = "synthetic-1"): ProjectMediaRecord => ({
@@ -64,4 +64,20 @@ test("advance stops at last slide and indices clamp when data shrinks", () => {
   assert.equal(galleryIndex(3, 0), 0);
   assert.equal(galleryIndex(Number.NaN, 4), 0);
   assert.equal(canRotateGallery({ ...rotation, index: 0, stopped: false }), true);
+});
+
+test("pointer Pause intent survives focus stopping rotation before click", () => {
+  const pointerIntent = galleryRotationAction(false, 0, 4);
+  assert.equal(pointerIntent, "pause");
+  // React focus has now committed stopped=true, but the pointer requested Pause.
+  assert.equal(galleryRotationAction(true, 0, 4, pointerIntent), "pause");
+  assert.equal(galleryRotationAction(true, 0, 4, null), "play");
+});
+
+test("keyboard and canceled pointer activation use current state; explicit Play remains supported", () => {
+  assert.equal(galleryRotationAction(true, 0, 4), "play");
+  assert.equal(galleryRotationAction(false, 0, 4), "pause");
+  assert.equal(galleryRotationAction(false, 3, 4), "play");
+  const pointerIntent = galleryRotationAction(true, 0, 4);
+  assert.equal(galleryRotationAction(true, 0, 4, pointerIntent), "play");
 });

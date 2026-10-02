@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
 import illustrativeImage from "../assets/images/temporary-illustrative-exterior.jpg";
 import { ILLUSTRATIVE_GALLERY_FALLBACK, PROJECT_GALLERY_IMAGES, type ProjectMediaRecord } from "../data/projectMedia";
-import { canRotateGallery, eligibleGalleryImages, galleryIndex, nextGalleryIndex } from "../utils/galleryState";
+import { canRotateGallery, eligibleGalleryImages, galleryIndex, galleryRotationAction, nextGalleryIndex, type GalleryRotationAction } from "../utils/galleryState";
 import "./ProjectGallery.css";
 
 export interface ProjectGalleryProps {
@@ -33,6 +33,7 @@ function ReadyGallery({ images }: { images: readonly ProjectMediaRecord[] }) {
   const region = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const manualScroll = useRef(false);
+  const pointerRotationIntent = useRef<GalleryRotationAction | null>(null);
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [index, setIndex] = useState(0);
   const [stopped, setStopped] = useState(false);
@@ -115,8 +116,15 @@ function ReadyGallery({ images }: { images: readonly ProjectMediaRecord[] }) {
           <button type="button" aria-label="Previous gallery image" aria-disabled={index === 0} onClick={() => moveTo(index - 1, true)}><ArrowLeft size={19} aria-hidden="true" /></button>
           <button type="button" aria-label="Next gallery image" aria-disabled={index === images.length - 1} onClick={() => moveTo(index + 1, true)}><ArrowRight size={19} aria-hidden="true" /></button>
           <button type="button" className="project-gallery__play" aria-label={stopped || index === images.length - 1 ? "Play gallery flow" : "Pause gallery flow"}
-            onClick={() => {
-              if (!stopped && index < images.length - 1) setStopped(true);
+            onPointerDown={(event) => {
+              pointerRotationIntent.current = event.button === 0 ? galleryRotationAction(stopped, index, images.length) : null;
+            }}
+            onPointerCancel={() => { pointerRotationIntent.current = null; }}
+            onKeyDown={() => { pointerRotationIntent.current = null; }}
+            onClick={(event) => {
+              const action = galleryRotationAction(stopped, index, images.length, event.detail > 0 ? pointerRotationIntent.current : null);
+              pointerRotationIntent.current = null;
+              if (action === "pause") setStopped(true);
               else { if (index === images.length - 1) moveTo(0, false); setStopped(false); setFocused(false); }
             }}>
             {stopped || index === images.length - 1 ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}

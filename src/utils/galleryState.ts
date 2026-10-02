@@ -48,3 +48,15 @@ export function canRotateGallery(state: GalleryRotationState): boolean {
 export function nextGalleryIndex(index: number, count: number): number {
   return galleryIndex(index + 1, count);
 }
+
+export type GalleryRotationAction = "play" | "pause";
+
+/** Pointer intent is captured before focus pauses rotation; keyboard uses the current label. */
+export function galleryRotationAction(
+  stopped: boolean,
+  index: number,
+  count: number,
+  pointerIntent: GalleryRotationAction | null = null,
+): GalleryRotationAction {
+  return pointerIntent ?? (stopped || index >= count - 1 ? "play" : "pause");
+}

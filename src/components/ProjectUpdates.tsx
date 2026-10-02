@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowRight, Bell, X } from "lucide-react";
 import "./ProjectUpdates.css";
 
@@ -30,7 +30,6 @@ export function UpdatesUnavailableDialog({
   const dialog = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const focusTask = useRef<number | null>(null);
-  const close = useCallback(onClose, [onClose]);
 
   useEffect(() => {
     if (focusTask.current !== null) cancelAnimationFrame(focusTask.current);
@@ -40,7 +39,7 @@ export function UpdatesUnavailableDialog({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        close();
+        onClose();
       }
       if (event.key !== "Tab") return;
       const buttons = [...(dialog.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled])") ?? [])];
@@ -65,18 +64,18 @@ export function UpdatesUnavailableDialog({
         }
       });
     };
-  }, [close, returnFocus]);
+  }, [onClose, returnFocus]);
 
   return (
     <div className="dialog-backdrop" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) close();
+      if (event.target === event.currentTarget) onClose();
     }}>
       <div ref={dialog} className="request-dialog updates-dialog" role="dialog" aria-modal="true" aria-labelledby="updates-dialog-title">
-        <button className="dialog-close" type="button" onClick={close} aria-label="Close updates notice"><X size={21} /></button>
+        <button className="dialog-close" type="button" onClick={onClose} aria-label="Close updates notice"><X size={21} /></button>
         <span className="eyebrow">PROJECT UPDATES</span>
         <h2 id="updates-dialog-title">Updates open soon.</h2>
         <p>Updates aren't connected yet. This preview does not subscribe you or collect contact details.</p>
-        <button ref={closeButton} className="button dark" type="button" onClick={close}>Close <ArrowRight size={16} aria-hidden="true" /></button>
+        <button ref={closeButton} className="button dark" type="button" onClick={onClose}>Close <ArrowRight size={16} aria-hidden="true" /></button>
       </div>
     </div>
   );
