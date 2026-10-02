@@ -1,6 +1,6 @@
 {
-  "name": "Prestige Thane - Private Launch Kit | EstateWise",
-  "description": "Standalone luxury PPC landing page for Prestige Thane / Prestige Falcon City Thane by EstateWise with indicative pricing, cost sheets, floor plans, and launch updates.",
+  "name": "Prestige Falcon City Thane | Campaign Preview",
+  "description": "Illustrative Prestige Falcon City Thane landing page preview. Project assets, pricing and lead destination await approval.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
