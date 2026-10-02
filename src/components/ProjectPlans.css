@@ -1,0 +1,94 @@
+.project-plans {
+  padding: 54px 24px;
+  background: var(--paper, #faf8f3);
+  border-block: 1px solid var(--line, #dcd6c9);
+}
+.project-plans-inner {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+.project-plans h2 {
+  margin: 0 0 27px;
+  font-size: 44px;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.project-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.project-plan-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 23px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line, #dcd6c9);
+}
+.project-plans .preview-art {
+  height: 165px;
+  min-width: 0;
+}
+.project-plans .visual-stamp {
+  inset: auto 6px 6px;
+  padding: 5px;
+  font-size: 10px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.project-plan-copy { min-width: 0; }
+.project-plan-copy h3 {
+  margin: 0;
+  font-size: 29px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.project-plan-copy p {
+  margin: 11px 0 19px;
+  color: #62675f;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.project-plan-copy button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid var(--ink, #1c221f);
+  background: var(--ink, #1c221f);
+  color: #faf8f3;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.project-plan-copy button svg { flex: 0 0 auto; }
+.project-plan-copy .project-plan-outline {
+  background: transparent;
+  color: var(--ink, #1c221f);
+  border-color: #a3895d;
+}
+@media (max-width: 1000px) {
+  .project-plan-card { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .project-plans { padding: 34px 22px; }
+  .project-plans h2 { font-size: 34px; margin-bottom: 21px; }
+  .project-plans-grid { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+  .project-plan-card {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: 15px;
+    padding: 15px;
+  }
+  .project-plan-copy h3 { font-size: 27px; }
+  .project-plan-copy p { margin: 8px 0 13px; }
+}
+@media (max-width: 359px) {
+  .project-plan-card { grid-template-columns: minmax(0, 1fr); }
+}

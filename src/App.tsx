@@ -6,11 +6,17 @@ import {
   ChevronRight,
   LockKeyhole,
   Menu,
-  Play,
   X,
 } from "lucide-react";
 import { LocationExperience } from "./components/LocationExperience";
 import { AmenitiesOverview } from "./components/AmenitiesOverview";
+import { BrandMark } from "./components/BrandMark";
+import { PreviewArt } from "./components/PreviewArt";
+import { ProjectPlans } from "./components/ProjectPlans";
+import { CampaignFooter } from "./components/CampaignFooter";
+import { ProjectGallery } from "./components/ProjectGallery";
+import { ProjectUpdates, UpdatesUnavailableDialog } from "./components/ProjectUpdates";
+import { APPROVED_PROJECT_MAP } from "./data/projectLocation";
 import heroImage from "./assets/images/temporary-illustrative-exterior.jpg";
 import "./landing.css";
 import { trackCampaignEvent } from "./utils/campaignAnalytics";
@@ -91,83 +97,6 @@ const interests = {
     },
   ],
 };
-const notice =
-  "Visuals are illustrative only. They do not represent the actual project.";
-
-function PreviewArt({ kind }: { kind: Card["visual"] }) {
-  if (kind === "video")
-    return (
-      <div className="preview-art video-art" aria-hidden="true">
-        <span className="play-disc">
-          <Play size={22} fill="currentColor" />
-        </span>
-        <span className="visual-stamp">VIDEO PREVIEW</span>
-      </div>
-    );
-  if (kind === "cost")
-    return (
-      <div className="preview-art cost-art" aria-hidden="true">
-        <div className="sample-sheet">
-          <span className="sheet-head" />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span className="sheet-head" />
-        </div>
-        <span className="visual-stamp">ILLUSTRATIVE SAMPLE</span>
-      </div>
-    );
-  if (kind === "master")
-    return (
-      <div className="preview-art plan-art master-art" aria-hidden="true">
-        <svg viewBox="0 0 440 250">
-          <path
-            d="M18 43H423V222H18z M43 66h111v64H43z M185 57h100v52H185z M317 66h79v73h-79z M36 158h91v48H36z M168 144h115v62H168z M315 164h90v43h-90z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            d="M145 42v184M302 43v181M20 146h403"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="12"
-            opacity=".34"
-          />
-          <circle
-            cx="222"
-            cy="125"
-            r="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-        </svg>
-        <span className="visual-stamp">ILLUSTRATIVE SAMPLE</span>
-      </div>
-    );
-  return (
-    <div className="preview-art plan-art floor-art" aria-hidden="true">
-      <svg viewBox="0 0 440 250">
-        <path
-          d="M46 23h346v205H46z M46 106h145V23 M190 106v122 M190 156h202 M282 23v133 M282 92h110 M93 106v122 M46 184h144"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="5"
-        />
-        <path
-          d="M204 156a48 48 0 0 1 48-48M282 95a39 39 0 0 1-39 39M92 180a39 39 0 0 1 39-39"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-      </svg>
-      <span className="visual-stamp">ILLUSTRATIVE SAMPLE</span>
-    </div>
-  );
-}
-
 function RequestDialog({
   intent,
   sourceSection,
@@ -372,6 +301,7 @@ function RequestDialog({
 }
 
 export default function App() {
+  const [updatesOpen, setUpdatesOpen] = useState(false);
   const [intent, setIntent] = useState<Intent | null>(null);
   const [sourceSection, setSourceSection] = useState("hero");
   const [showSticky, setShowSticky] = useState(false);
@@ -442,10 +372,20 @@ export default function App() {
     trackCampaignEvent("form_open", { intent: value, source });
     openerRef.current = document.activeElement as HTMLElement | null;
     setWhatsappNotice(false);
+    setUpdatesOpen(false);
     setSourceSection(source);
     setIntent(value);
   };
   const close = useCallback(() => setIntent(null), []);
+  const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
+  const openUpdates = () => {
+    openerRef.current = document.activeElement as HTMLElement | null;
+    setIntent(null);
+    setWhatsappNotice(false);
+    setUpdatesOpen(true);
+    trackCampaignEvent("cta_click", { source: "updates_pending" });
+    trackCampaignEvent("form_unavailable", { source: "updates_pending" });
+  };
   const chat = () => {
     trackCampaignEvent("cta_click", { source: "whatsapp_pending" });
     setWhatsappNotice(true);
@@ -459,11 +399,7 @@ export default function App() {
           href="#top"
           aria-label="Prestige Falcon City Thane, return to top"
         >
-          <span className="brand-name">PRESTIGE</span>
-          <span className="brand-sub">
-            FALCON CITY <i /> THANE
-          </span>
-          <small>Brand mark pending approval</small>
+          <BrandMark />
         </a>
         <nav
           className={menuOpen ? "site-nav open" : "site-nav"}
@@ -568,6 +504,7 @@ export default function App() {
             enquiry form for development testing.
           </div>
         )}
+        <ProjectGallery />
         <section className="intro-section" id="details">
           <div className="section-top">
             <div>
@@ -606,6 +543,7 @@ export default function App() {
             pricing are not publicly available.
           </p>
         </section>
+        <ProjectPlans onRequest={open} />
         <section className="experience-section" id="amenities">
           <div className="experience-heading">
             <div>
@@ -731,7 +669,7 @@ export default function App() {
           </div>
         </section>
         <AmenitiesOverview />
-        <LocationExperience />
+        <LocationExperience approvedMap={APPROVED_PROJECT_MAP} />
         <section className="closing-section" id="enquire" ref={footerRef} aria-labelledby="visit-heading">
           <div className="visit-card">
             <div className="visit-image">
@@ -757,20 +695,10 @@ export default function App() {
             </div>
           </div>
         </section>
+        <ProjectUpdates onOpen={openUpdates} />
       </main>
-      <footer className="site-footer">
-        <div>
-          <strong>PRESTIGE</strong>
-          <span>FALCON CITY · THANE</span>
-        </div>
-        <p>
-          {notice} Project information, original logo, statutory details and
-          privacy text await campaign approval. This preview does not offer
-          released pricing or documents.
-        </p>
-        <a href="#top">Back to top ↑</a>
-      </footer>
-      {showSticky && !footerVisible && !intent &&
+      <CampaignFooter />
+      {showSticky && !footerVisible && !intent && !updatesOpen &&
         !(inlineFocused === "hero_registration" && registrationVisible) && (
         <div className="sticky-actions">
           <span>Explore the details</span>
@@ -788,6 +716,9 @@ export default function App() {
             WhatsApp
           </button>
         </div>
+      )}
+      {updatesOpen && (
+        <UpdatesUnavailableDialog onClose={closeUpdates} returnFocus={openerRef.current} />
       )}
       {intent && (
         <RequestDialog

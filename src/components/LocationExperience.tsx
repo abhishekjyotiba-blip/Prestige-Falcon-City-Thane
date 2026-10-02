@@ -6,6 +6,8 @@ import {
   type LocationCategory,
   type VerifiedLocationPoint,
 } from "../utils/locationData";
+import { GoogleProjectMap } from "./GoogleProjectMap";
+import { getApprovedGoogleMap, type ApprovedGoogleMap } from "../utils/googleMap";
 import "./LocationExperience.css";
 
 // Preserve the future verified-data integration contract.
@@ -13,6 +15,7 @@ export { LOCATION_CATEGORIES };
 export type { LocationCategory, VerifiedLocationPoint };
 export interface LocationExperienceProps {
   points?: readonly VerifiedLocationPoint[];
+  approvedMap?: ApprovedGoogleMap | null;
   approvedProjectPin?: { latitude: number; longitude: number };
 }
 
@@ -23,7 +26,8 @@ const modeLabels: Record<VerifiedLocationPoint["distance"]["mode"], string> = {
   "straight-line": "Straight-line",
 };
 
-export function LocationExperience({ points = [], approvedProjectPin }: LocationExperienceProps) {
+export function LocationExperience({ points = [], approvedProjectPin, approvedMap }: LocationExperienceProps) {
+  const googleMap = getApprovedGoogleMap(approvedMap);
   const [category, setCategory] = useState<LocationCategory>("Connectivity");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [requestedPage, setRequestedPage] = useState(0);
@@ -45,9 +49,12 @@ export function LocationExperience({ points = [], approvedProjectPin }: Location
   }
 
   return (
-    <section className="location-experience" id="location" aria-labelledby="location-experience-title">
+    <section className={`location-experience${googleMap ? " location-experience--google" : ""}`} id="location" aria-labelledby="location-experience-title">
       <div className="location-experience__inner">
         <h2 id="location-experience-title">Discover the neighbourhood</h2>
+        {googleMap ? (
+          <GoogleProjectMap key={googleMap.embedUrl} map={googleMap} />
+        ) : (
         <div className="location-experience__map" role="group" aria-label={`${category} schematic; not an actual map`}>
           <p className="location-experience__map-label">Schematic · Not an actual map</p>
           <div className="location-experience__ring" aria-hidden="true" />
@@ -73,6 +80,7 @@ export function LocationExperience({ points = [], approvedProjectPin }: Location
             </button>
           ))}
         </div>
+        )}
 
         <div className="location-experience__categories" role="tablist" aria-label="Neighbourhood categories">
           {LOCATION_CATEGORIES.map((item, index) => (
@@ -132,7 +140,7 @@ export function LocationExperience({ points = [], approvedProjectPin }: Location
             </nav>
           )}
           <p className="location-experience__notice" id={noticeId}>
-            {isExample ? "Example places · Distances pending" : "Verified places · Schematic positions only"}
+            {isExample ? "Example places · Distances pending" : googleMap ? "Verified places · Distance details below" : "Verified places · Schematic positions only"}
           </p>
           {selected?.kind === "verified" && (
             <details className="location-experience__metadata" key={selected.id}>
