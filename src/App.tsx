@@ -2,28 +2,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   LockKeyhole,
   Menu,
   X,
 } from "lucide-react";
 import { LocationExperience } from "./components/LocationExperience";
 import { AmenitiesOverview } from "./components/AmenitiesOverview";
+import { AmenitiesSlideshow } from "./components/AmenitiesSlideshow";
 import { BrandMark } from "./components/BrandMark";
 import { PreviewArt } from "./components/PreviewArt";
 import { ProjectPlans } from "./components/ProjectPlans";
 import { CampaignFooter } from "./components/CampaignFooter";
 import { ProjectGallery } from "./components/ProjectGallery";
-import { ProjectUpdates, UpdatesUnavailableDialog } from "./components/ProjectUpdates";
+import { ProjectUpdates } from "./components/ProjectUpdates";
 import { APPROVED_PROJECT_MAP } from "./data/projectLocation";
 import heroImage from "./assets/images/temporary-illustrative-exterior.jpg";
 import "./landing.css";
 import { trackCampaignEvent } from "./utils/campaignAnalytics";
-import { useLeadEnquiry, type EnquiryIntent } from "./utils/useLeadEnquiry";
+import { type EnquiryKind } from "./utils/enquiryPreview";
+import { EnquiryDialog } from "./components/EnquiryDialog";
 import { InlineEnquiryForm } from "./components/InlineEnquiryForm";
 
-type Intent = EnquiryIntent;
+type Intent = EnquiryKind;
 type Card = {
   intent: Intent;
   title: string;
@@ -61,247 +61,7 @@ const cards: Card[] = [
     visual: "video",
   },
 ];
-const interests = {
-  amenities: [
-    {
-      name: "Space to unwind",
-      detail: "Visual direction only",
-      style: "leisure",
-    },
-    {
-      name: "Space to move",
-      detail: "Visual direction only",
-      style: "movement",
-    },
-    {
-      name: "Space to gather",
-      detail: "Visual direction only",
-      style: "garden",
-    },
-  ],
-  facilities: [
-    {
-      name: "Thoughtful everyday spaces",
-      detail: "Details pending approval",
-      style: "movement",
-    },
-    {
-      name: "A considered arrival",
-      detail: "Details pending approval",
-      style: "garden",
-    },
-    {
-      name: "Room for what matters",
-      detail: "Details pending approval",
-      style: "leisure",
-    },
-  ],
-};
-function RequestDialog({
-  intent,
-  sourceSection,
-  onClose,
-  returnFocus,
-}: {
-  intent: Intent;
-  sourceSection: string;
-  onClose: () => void;
-  returnFocus: HTMLElement | null;
-}) {
-  const {
-    formAvailable, name, setName, phone, setPhone,
-    whatsappOptIn, setWhatsappOptIn, pending, saved, error,
-    markStarted, submit,
-  } = useLeadEnquiry(intent, sourceSection);
-  const firstInput = useRef<HTMLInputElement>(null);
-  const resultClose = useRef<HTMLButtonElement>(null);
-  const focusTask = useRef<number | null>(null);
-  useEffect(() => {
-    if (saved) resultClose.current?.focus();
-  }, [saved]);
-  useEffect(() => {
-    if (focusTask.current !== null) cancelAnimationFrame(focusTask.current);
-    const before = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    focusTask.current = requestAnimationFrame(() => {
-      if (formAvailable) firstInput.current?.focus();
-      else resultClose.current?.focus();
-    });
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (event.key === "Tab") {
-        const elements = [
-          ...document.querySelectorAll<HTMLElement>(
-            ".request-dialog button:not([disabled]), .request-dialog input:not([disabled])",
-          ),
-        ];
-        const index = elements.indexOf(document.activeElement as HTMLElement);
-        if (index === -1) {
-          event.preventDefault();
-          elements[0]?.focus();
-        } else if (event.shiftKey && index === 0) {
-          event.preventDefault();
-          elements.at(-1)?.focus();
-        } else if (!event.shiftKey && index === elements.length - 1) {
-          event.preventDefault();
-          elements[0]?.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = before;
-      document.removeEventListener("keydown", onKeyDown);
-      if (focusTask.current !== null) cancelAnimationFrame(focusTask.current);
-      focusTask.current = requestAnimationFrame(() => {
-        if (returnFocus?.isConnected) returnFocus.focus();
-        else {
-          const fallback = window.matchMedia("(max-width: 700px)").matches
-            ? ".site-header .menu-toggle"
-            : ".site-header .nav-action";
-          document.querySelector<HTMLElement>(fallback)?.focus();
-        }
-      });
-    };
-  }, [onClose, returnFocus, formAvailable]);
-
-  const label =
-    intent === "price"
-      ? "pricing update"
-      : intent === "master_plan"
-        ? "master plan"
-        : intent === "floor_plan"
-          ? "floor plans"
-          : intent === "video"
-            ? "project film"
-            : "project details";
-  return (
-    <div
-      className="dialog-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="request-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="request-title"
-      >
-        <button
-          className="dialog-close"
-          type="button"
-          onClick={onClose}
-          aria-label="Close form"
-        >
-          <X size={21} />
-        </button>
-        {!formAvailable ? (
-          <div className="request-result" role="status">
-            <span className="eyebrow">CAMPAIGN PREVIEW</span>
-            <h2 id="request-title">Enquiries open soon.</h2>
-            <p>
-              The campaign privacy notice and lead destination are not connected
-              yet. This preview does not collect contact details or deliver{" "}
-              {label}.
-            </p>
-            <button ref={resultClose} className="button dark" onClick={onClose}>
-              Close <ArrowRight size={16} />
-            </button>
-          </div>
-        ) : saved ? (
-          <div className="request-result" role="status">
-            <span className="eyebrow">Request recorded</span>
-            <h2 id="request-title">Thank you, {name.trim().split(" ")[0]}.</h2>
-            <p>
-              This preview saved your enquiry for development testing only.
-              Approved {label} is not available yet. No document or WhatsApp
-              message was sent.
-            </p>
-            <button ref={resultClose} className="button dark" onClick={onClose}>
-              Close <ArrowRight size={16} />
-            </button>
-          </div>
-        ) : (
-          <>
-            <span className="eyebrow">YOUR PROJECT ENQUIRY</span>
-            <h2 id="request-title">The details, when ready.</h2>
-            <p className="dialog-intro">
-              Request an update about {label}. Approved files and the campaign
-              contact are still pending.
-            </p>
-            <form
-              onSubmit={submit}
-              onChange={markStarted}
-              noValidate
-            >
-              <label htmlFor="lead-name">Your name</label>
-              <input
-                ref={firstInput}
-                id="lead-name"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Full name"
-                autoComplete="name"
-                required
-                maxLength={90}
-              />
-              <label htmlFor="lead-phone">Mobile number</label>
-              <input
-                id="lead-phone"
-                name="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+91  Your mobile number"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                required
-                maxLength={16}
-              />
-              <p className="form-notice">
-                Use this number only to respond to this project enquiry.
-                Campaign privacy information is pending approval.
-              </p>
-              <label className="check-row">
-                <input
-                  type="checkbox"
-                  checked={whatsappOptIn}
-                  onChange={(e) => setWhatsappOptIn(e.target.checked)}
-                />
-                <span>
-                  Optional: contact me by WhatsApp when this channel is
-                  available.
-                </span>
-              </label>
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button
-                className="button gold submit-button"
-                type="submit"
-                disabled={pending}
-              >
-                {pending ? "Sending request…" : "Request update"}{" "}
-                <ArrowRight size={17} />
-              </button>
-            </form>
-            <p className="form-small">
-              Preview only. No approved project file or production lead
-              destination is connected.
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
-  const [updatesOpen, setUpdatesOpen] = useState(false);
   const [intent, setIntent] = useState<Intent | null>(null);
   const [sourceSection, setSourceSection] = useState("hero");
   const [showSticky, setShowSticky] = useState(false);
@@ -311,16 +71,10 @@ export default function App() {
     "hero_registration" | "final_site_visit" | null
   >(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [category, setCategory] = useState<"amenities" | "facilities">(
-    "amenities",
-  );
-  const [slide, setSlide] = useState(0);
-  const [whatsappNotice, setWhatsappNotice] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const registrationRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
   const scrollMilestones = useRef(new Set<number>());
   useEffect(() => {
     const onScroll = () => {
@@ -366,31 +120,15 @@ export default function App() {
     observer.observe(footer);
     return () => observer.disconnect();
   }, []);
-  const current = interests[category];
   const open = (value: Intent, source: string) => {
     trackCampaignEvent("cta_click", { intent: value, source });
     trackCampaignEvent("form_open", { intent: value, source });
     openerRef.current = document.activeElement as HTMLElement | null;
-    setWhatsappNotice(false);
-    setUpdatesOpen(false);
+    setMenuOpen(false);
     setSourceSection(source);
     setIntent(value);
   };
   const close = useCallback(() => setIntent(null), []);
-  const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
-  const openUpdates = () => {
-    openerRef.current = document.activeElement as HTMLElement | null;
-    setIntent(null);
-    setWhatsappNotice(false);
-    setUpdatesOpen(true);
-    trackCampaignEvent("cta_click", { source: "updates_pending" });
-    trackCampaignEvent("form_unavailable", { source: "updates_pending" });
-  };
-  const chat = () => {
-    trackCampaignEvent("cta_click", { source: "whatsapp_pending" });
-    setWhatsappNotice(true);
-    window.setTimeout(() => setWhatsappNotice(false), 6500);
-  };
   return (
     <div className="landing">
       <header className="site-header">
@@ -416,7 +154,7 @@ export default function App() {
           </a>
           <button
             className="button dark nav-action"
-            onClick={() => open("callback", "header")}
+            onClick={() => open("enquiry", "header")}
           >
             Enquire <ArrowRight size={16} />
           </button>
@@ -471,14 +209,14 @@ export default function App() {
             </span>
             <ArrowRight size={19} />
           </button>
-          <button onClick={() => open("floor_plan", "hero_plans")}>
+          <button onClick={() => open("brochure", "hero_plans")}>
             <span className="cta-number">02</span>
             <span>
               View plans & brochure<small>See what's coming</small>
             </span>
             <ArrowRight size={19} />
           </button>
-          <button onClick={chat}>
+          <button onClick={() => open("whatsapp", "hero_whatsapp")}>
             <span className="cta-number">03</span>
             <span>
               Chat on WhatsApp<small>Number pending approval</small>
@@ -490,7 +228,7 @@ export default function App() {
           <div className="registration-card">
             <h2 id="registration-heading">Pre-register for benefits</h2>
             <InlineEnquiryForm
-              sourceSection="hero_registration"
+              onOpen={() => open("registration", "hero_registration")}
               action="Express your interest"
               onFocusChange={(focused) =>
                 setInlineFocused(focused ? "hero_registration" : null)
@@ -498,12 +236,6 @@ export default function App() {
             />
           </div>
         </section>
-        {whatsappNotice && (
-          <div className="channel-notice" role="status">
-            The campaign WhatsApp number is not connected yet. Please use the
-            enquiry form for development testing.
-          </div>
-        )}
         <ProjectGallery />
         <section className="intro-section" id="details">
           <div className="section-top">
@@ -552,121 +284,11 @@ export default function App() {
                 More room for <em>possibility.</em>
               </h2>
               <p>
-                Illustrative themes. The approved list of amenities and
-                facilities is pending.
+                Illustrative concepts · Final amenities and facilities pending.
               </p>
             </div>
-            <div className="carousel-controls">
-              <button
-                aria-label="Previous feature"
-                onClick={() =>
-                  setSlide((slide - 1 + current.length) % current.length)
-                }
-              >
-                <ChevronLeft size={21} />
-              </button>
-              <button
-                aria-label="Next feature"
-                onClick={() => setSlide((slide + 1) % current.length)}
-              >
-                <ChevronRight size={21} />
-              </button>
-            </div>
           </div>
-          <div
-            className="experience-tabs"
-            role="tablist"
-            aria-label="Explore features"
-          >
-            {(["amenities", "facilities"] as const).map((tab) => (
-              <button
-                key={tab}
-                id={`feature-tab-${tab}`}
-                role="tab"
-                aria-selected={category === tab}
-                aria-controls="feature-panel"
-                tabIndex={category === tab ? 0 : -1}
-                onKeyDown={(event) => {
-                  if (
-                    !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
-                      event.key,
-                    )
-                  )
-                    return;
-                  event.preventDefault();
-                  const next =
-                    event.key === "Home"
-                      ? "amenities"
-                      : event.key === "End"
-                        ? "facilities"
-                        : category === "amenities"
-                          ? "facilities"
-                          : "amenities";
-                  setCategory(next);
-                  setSlide(0);
-                  document.getElementById(`feature-tab-${next}`)?.focus();
-                }}
-                onClick={() => {
-                  setCategory(tab);
-                  setSlide(0);
-                }}
-              >
-                {tab === "amenities" ? "Amenities" : "Facilities"}
-                <span>0{tab === "amenities" ? "1" : "2"}</span>
-              </button>
-            ))}
-          </div>
-          <div
-            className="experience-gallery"
-            id="feature-panel"
-            role="tabpanel"
-            aria-labelledby={`feature-tab-${category}`}
-            aria-live="polite"
-            onTouchStart={(event) => {
-              touchStartX.current = event.touches[0]?.clientX ?? null;
-            }}
-            onTouchEnd={(event) => {
-              const start = touchStartX.current;
-              touchStartX.current = null;
-              if (start === null) return;
-              const distance = event.changedTouches[0]?.clientX - start;
-              if (Math.abs(distance) > 45)
-                setSlide(
-                  (index) =>
-                    (index + (distance < 0 ? 1 : current.length - 1)) %
-                    current.length,
-                );
-            }}
-          >
-            <div className={`experience-photo ${current[slide].style}`}>
-              <span className="photo-number">
-                0{slide + 1} / 0{current.length}
-              </span>
-              <span className="photo-disclaimer">
-                Illustrative concept, not a project amenity
-              </span>
-            </div>
-            <div className="experience-caption">
-              <span className="eyebrow">
-                {category.toUpperCase()} · 0{slide + 1}
-              </span>
-              <h3>{current[slide].name}</h3>
-              <p>
-                {current[slide].detail}. Verified facilities and photographs
-                will follow the approved project pack.
-              </p>
-              <div className="slide-dots" aria-label="Choose feature">
-                {current.map((item, index) => (
-                  <button
-                    key={item.name}
-                    aria-label={`Show feature ${index + 1}`}
-                    aria-current={index === slide ? "true" : undefined}
-                    onClick={() => setSlide(index)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          <AmenitiesSlideshow />
         </section>
         <AmenitiesOverview />
         <LocationExperience approvedMap={APPROVED_PROJECT_MAP} />
@@ -686,7 +308,7 @@ export default function App() {
               <span className="eyebrow">SEE IT FOR YOURSELF</span>
               <h2 id="visit-heading">Request a <em>site visit.</em></h2>
               <InlineEnquiryForm
-                sourceSection="final_site_visit"
+                onOpen={() => open("site_visit", "final_site_visit")}
                 action="Request a site visit"
                 onFocusChange={(focused) =>
                   setInlineFocused(focused ? "final_site_visit" : null)
@@ -695,10 +317,10 @@ export default function App() {
             </div>
           </div>
         </section>
-        <ProjectUpdates onOpen={openUpdates} />
+        <ProjectUpdates onOpen={() => open("updates", "updates_pending")} />
       </main>
       <CampaignFooter />
-      {showSticky && !footerVisible && !intent && !updatesOpen &&
+      {showSticky && !footerVisible && !intent &&
         !(inlineFocused === "hero_registration" && registrationVisible) && (
         <div className="sticky-actions">
           <span>Explore the details</span>
@@ -710,27 +332,23 @@ export default function App() {
           </button>
           <button
             className="sticky-chat"
-            onClick={chat}
-            aria-label="WhatsApp availability"
+            onClick={() => open("whatsapp", "sticky_whatsapp")}
+            aria-label="WhatsApp enquiry"
           >
             WhatsApp
           </button>
         </div>
       )}
-      {updatesOpen && (
-        <UpdatesUnavailableDialog onClose={closeUpdates} returnFocus={openerRef.current} />
-      )}
       {intent && (
-        <RequestDialog
-          intent={intent}
+        <EnquiryDialog
+          key={`${intent}:${sourceSection}`}
+          kind={intent}
           sourceSection={sourceSection}
           onClose={close}
           returnFocus={openerRef.current}
         />
       )}
-      <span className="sr-only">
-        {whatsappNotice ? "WhatsApp is not yet available" : ""}
-      </span>
+
     </div>
   );
 }

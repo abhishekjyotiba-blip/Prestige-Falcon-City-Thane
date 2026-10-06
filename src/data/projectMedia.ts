@@ -48,3 +48,29 @@ export const ILLUSTRATIVE_GALLERY_FALLBACK = {
   width: 1600,
   height: 779,
 } as const;
+
+/** Reviewed offline output only; prompt/job references stay outside the public bundle. */
+export interface GeneratedConceptRecord {
+  readonly id: string;
+  readonly kind: "generated-concept";
+  readonly depiction: "ai-illustration";
+  readonly approvalStatus: "approved" | "pending" | "excluded";
+  readonly generatedOn: string;
+  readonly generator: string;
+  readonly conceptLabel: string;
+  /** Must explicitly identify the scene as illustrative, not actual project imagery. */
+  readonly alt: string;
+  readonly image: LocalImageVariant;
+  readonly variants?: readonly LocalImageVariant[];
+}
+
+// No output has been generated/reviewed yet. Add imported optimized local WebP/AVIF
+// assets here only after visual review, with actual generation date and generator.
+export const PROJECT_CONCEPT_IMAGES: readonly GeneratedConceptRecord[] = [];
+export type AmenityCategory = "amenities" | "facilities";
+export const AMENITY_CONCEPT_IMAGES: Readonly<Record<AmenityCategory, readonly GeneratedConceptRecord[]>> = {
+  amenities: [],
+  facilities: [],
+};
+export const GALLERY_CONCEPT_QUALIFIER = "AI-generated illustrative concept · Not an actual project image";
+export const AMENITY_CONCEPT_QUALIFIER = "AI-generated illustrative concept · Not a confirmed project amenity";

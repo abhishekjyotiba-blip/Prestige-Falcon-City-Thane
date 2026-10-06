@@ -1,0 +1,24 @@
+.amenities-slideshow { min-width: 0; color: #1c221f; font-family: "Plus Jakarta Sans", sans-serif; }
+.amenities-slideshow__tabs { display: flex; flex-wrap: wrap; gap: 16px 32px; border-bottom: 1px solid #c3c2b6; margin-bottom: 24px; }
+.amenities-slideshow__tabs button { flex: 1 1 130px; max-width: 240px; min-width: 0; min-height: 48px; padding: 12px 0; border: 0; border-bottom: 2px solid transparent; text-align: left; background: transparent; color: #656a62; font: inherit; font-size: .875rem; font-weight: 600; overflow-wrap: anywhere; cursor: pointer; }
+.amenities-slideshow__tabs button[aria-selected="true"] { color: #1c221f; border-bottom-color: #ac8b56; }
+.amenities-slideshow__figure { margin: 0; }
+.amenities-slideshow__figure img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 7; max-height: 440px; object-fit: cover; background: #e5dfd4; }
+.amenities-slideshow__figure figcaption { margin-top: 16px; }
+.amenities-slideshow__label { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; flex-wrap: wrap; font-size: .9375rem; overflow-wrap: anywhere; }
+.amenities-slideshow__label strong { font-weight: 600; }
+.amenities-slideshow__label > span { color: #62675f; font-size: .8125rem; }
+.amenities-slideshow__figure figcaption p { margin: 8px 0 0; color: #62675f; font-size: .75rem; line-height: 1.6; overflow-wrap: anywhere; }
+.amenities-slideshow__controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.amenities-slideshow__controls button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 10px; border-radius: 50%; border: 1px solid #c9bfac; background: #faf8f3; color: #1c221f; cursor: pointer; }
+.amenities-slideshow__controls button[aria-disabled="true"] { color: #746d62; }
+.amenities-slideshow__direct { display: flex; justify-content: center; flex-wrap: wrap; min-width: 0; flex: 1; }
+.amenities-slideshow__direct button { border: 0; background: transparent; }
+.amenities-slideshow__direct button > span { display: block; width: 7px; height: 7px; border-radius: 50%; background: #96988f; }
+.amenities-slideshow__direct button[aria-current="true"] > span { background: #ac8b56; }
+.amenities-slideshow button:focus-visible, .amenities-slideshow [role="tabpanel"]:focus-visible { outline: 2px solid #816c45; outline-offset: 4px; }
+.amenities-slideshow__status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 700px) {
+  .amenities-slideshow__tabs { gap: 16px; margin-bottom: 20px; }
+  .amenities-slideshow__figure img { aspect-ratio: 4 / 3; max-height: 340px; }
+}

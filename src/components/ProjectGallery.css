@@ -23,3 +23,4 @@
   .project-gallery__fallback img { min-height: 180px; }
 }
 @media (prefers-reduced-motion: reduce) { .project-gallery__track { scroll-behavior: auto; } }
+.project-gallery__qualifier { margin: 0 0 20px; color: #625e57; font-size: .8125rem; line-height: 1.6; overflow-wrap: anywhere; }

@@ -1,4 +1,4 @@
-import { CAMPAIGN_PROJECT_IDENTITY, type LocalImageVariant, type ProjectMediaRecord } from "../data/projectMedia";
+import { CAMPAIGN_PROJECT_IDENTITY, type GeneratedConceptRecord, type LocalImageVariant, type ProjectMediaRecord } from "../data/projectMedia";
 
 export function isLocalImage(image: LocalImageVariant): boolean {
   return Boolean(image?.src && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(image.src) &&
@@ -59,4 +59,30 @@ export function galleryRotationAction(
   pointerIntent: GalleryRotationAction | null = null,
 ): GalleryRotationAction {
   return pointerIntent ?? (stopped || index >= count - 1 ? "play" : "pause");
+}
+
+/** Separate from the strict official-project gate above. Never grants authenticity. */
+export function isEligibleConceptImage(record: GeneratedConceptRecord): boolean {
+  const optimizedLocal = (image: LocalImageVariant) => isLocalImage(image) && /\.(?:webp|avif)(?:\?[^#]*)?$/i.test(image.src);
+  return record.kind === "generated-concept" && record.depiction === "ai-illustration" &&
+    record.approvalStatus === "approved" && Boolean(record.id.trim() && record.generator.trim() && record.conceptLabel.trim()) &&
+    /\billustrative\b/i.test(record.alt) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.generatedOn) && Number.isFinite(Date.parse(record.generatedOn)) &&
+    new Date(record.generatedOn).toISOString().slice(0, 10) === record.generatedOn &&
+    optimizedLocal(record.image) && (record.variants ?? []).every(optimizedLocal);
+}
+
+export function eligibleConceptImages(records: readonly GeneratedConceptRecord[]): GeneratedConceptRecord[] {
+  const ids = new Set<string>();
+  return records.filter((record) => {
+    if (!isEligibleConceptImage(record) || ids.has(record.id)) return false;
+    ids.add(record.id);
+    return true;
+  });
+}
+
+/** Verified media always wins; concept approval never bypasses project verification. */
+export function selectGalleryImages(project: readonly ProjectMediaRecord[], concepts: readonly GeneratedConceptRecord[]) {
+  const verified = eligibleGalleryImages(project);
+  return verified.length ? verified : eligibleConceptImages(concepts);
 }

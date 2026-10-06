@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   LOCATION_CATEGORIES,
   getLocationPage,
@@ -6,8 +6,9 @@ import {
   type LocationCategory,
   type VerifiedLocationPoint,
 } from "../utils/locationData";
+import { APPROVED_NEARBY_PLACES } from "../data/projectLocation";
 import { GoogleProjectMap } from "./GoogleProjectMap";
-import { getApprovedGoogleMap, type ApprovedGoogleMap } from "../utils/googleMap";
+import { getApprovedGoogleMap, getApprovedMapPoints, isBrowserMapKey, type ApprovedGoogleMap } from "../utils/googleMap";
 import "./LocationExperience.css";
 
 // Preserve the future verified-data integration contract.
@@ -19,22 +20,25 @@ export interface LocationExperienceProps {
   approvedProjectPin?: { latitude: number; longitude: number };
 }
 
-const modeLabels: Record<VerifiedLocationPoint["distance"]["mode"], string> = {
+const modeLabels: Record<NonNullable<VerifiedLocationPoint["distance"]>["mode"], string> = {
   driving: "Driving route",
   walking: "Walking route",
   transit: "Transit route",
   "straight-line": "Straight-line",
 };
 
-export function LocationExperience({ points = [], approvedProjectPin, approvedMap }: LocationExperienceProps) {
+export function LocationExperience({ points = APPROVED_NEARBY_PLACES, approvedProjectPin, approvedMap }: LocationExperienceProps) {
   const googleMap = getApprovedGoogleMap(approvedMap);
+  const mapConfigured = !!googleMap && isBrowserMapKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  const approvedPoints = useMemo(() => googleMap ? getApprovedMapPoints(points) : points, [googleMap, points]);
   const [category, setCategory] = useState<LocationCategory>("Connectivity");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [requestedPage, setRequestedPage] = useState(0);
   const id = useId();
   const panelId = `${id}-places`;
   const noticeId = `${id}-notice`;
-  const { places, isExample, totalPages, page, start } = getLocationPage(points, category, requestedPage);
+  const { places, isExample, totalPages, page, start } = useMemo(() => getLocationPage(approvedPoints, category, requestedPage, !googleMap), [approvedPoints, category, requestedPage, googleMap]);
+  const mapPlaces = useMemo(() => getApprovedMapPoints(places.filter((point) => point.kind === "verified")), [places]);
   const selected = getSelectedLocation(places, selectedId);
   const selectedTabId = `${id}-tab-${LOCATION_CATEGORIES.indexOf(category)}`;
 
@@ -52,8 +56,8 @@ export function LocationExperience({ points = [], approvedProjectPin, approvedMa
     <section className={`location-experience${googleMap ? " location-experience--google" : ""}`} id="location" aria-labelledby="location-experience-title">
       <div className="location-experience__inner">
         <h2 id="location-experience-title">Discover the neighbourhood</h2>
-        {googleMap ? (
-          <GoogleProjectMap key={googleMap.embedUrl} map={googleMap} />
+        {googleMap && mapConfigured ? (
+          <GoogleProjectMap key={`${googleMap.shareUrl}:${googleMap.mapId}:${googleMap.projectPin.latitude}:${googleMap.projectPin.longitude}`} map={googleMap} places={mapPlaces} selectedId={places.some((point) => point.id === selectedId) ? selectedId : null} start={start} onSelectPlace={setSelectedId} />
         ) : (
         <div className="location-experience__map" role="group" aria-label={`${category} schematic; not an actual map`}>
           <p className="location-experience__map-label">Schematic · Not an actual map</p>
@@ -64,7 +68,7 @@ export function LocationExperience({ points = [], approvedProjectPin, approvedMa
           <div className="location-experience__centre">
             <span className="location-experience__centre-dot" aria-hidden="true" />
             <strong>Prestige Falcon City</strong>
-            <span>{approvedProjectPin ? "Schematic only" : "Project pin unverified"}</span>
+            <span>{googleMap || approvedProjectPin ? "Schematic only" : "Project pin unverified"}</span>
           </div>
           {places.map((point, index) => (
             <button
@@ -81,6 +85,8 @@ export function LocationExperience({ points = [], approvedProjectPin, approvedMa
           ))}
         </div>
         )}
+
+        {googleMap && !mapConfigured && <p className="location-experience__notice">Map configuration unavailable · <a href={googleMap.shareUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a></p>}
 
         <div className="location-experience__categories" role="tablist" aria-label="Neighbourhood categories">
           {LOCATION_CATEGORIES.map((item, index) => (
@@ -117,21 +123,23 @@ export function LocationExperience({ points = [], approvedProjectPin, approvedMa
                 <button
                   className={`location-experience__place${selected?.id === point.id ? " is-active" : ""}`}
                   type="button"
-                  aria-label={`${point.kind === "example" ? "Example: " : ""}${point.name}${point.kind === "verified" ? `, ${point.distance.value} ${point.distance.unit}, ${modeLabels[point.distance.mode]}` : ""}`}
+                  aria-label={`${point.kind === "example" ? "Example: " : ""}${point.name}${point.kind === "verified" && point.distance ? `, ${point.distance.value} ${point.distance.unit}, ${modeLabels[point.distance.mode]}` : ""}`}
                   aria-pressed={selected?.id === point.id}
                   onClick={() => setSelectedId(point.id)}
                 >
                   <span className="location-experience__place-index" aria-hidden="true">{String(start + index + 1).padStart(2, "0")}</span>
                   <span className="location-experience__place-name">{point.name}</span>
-                  {point.kind === "verified" && (
+                  {point.kind === "verified" && point.distance && (
                     <span className="location-experience__distance">
                       {point.distance.value} {point.distance.unit}
                     </span>
                   )}
+                  {point.kind === "verified" && !point.distance && <span className="location-experience__distance">Distance unavailable</span>}
                 </button>
               </li>
             ))}
           </ol>
+          {googleMap && !places.length && <p className="location-experience__notice">Nearby places pending verification</p>}
           {totalPages > 1 && (
             <nav className="location-experience__pagination" aria-label={`${category} place pages`}>
               <button type="button" onClick={() => choosePage(page - 1)} disabled={page === 0}>Previous</button>
@@ -140,9 +148,9 @@ export function LocationExperience({ points = [], approvedProjectPin, approvedMa
             </nav>
           )}
           <p className="location-experience__notice" id={noticeId}>
-            {isExample ? "Example places · Distances pending" : googleMap ? "Verified places · Distance details below" : "Verified places · Schematic positions only"}
+            {isExample ? "Site data pending · Example places · Distances pending" : googleMap ? "Approved places · Sourced distances where available" : "Verified places · Schematic positions only"}
           </p>
-          {selected?.kind === "verified" && (
+          {selected?.kind === "verified" && selected.distance && (
             <details className="location-experience__metadata" key={selected.id}>
               <summary>Distance details for {selected.name}</summary>
               <p>{modeLabels[selected.distance.mode]} · {selected.distance.source} · {selected.distance.observedOn}</p>

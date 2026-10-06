@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
 import illustrativeImage from "../assets/images/temporary-illustrative-exterior.jpg";
-import { ILLUSTRATIVE_GALLERY_FALLBACK, PROJECT_GALLERY_IMAGES, type ProjectMediaRecord } from "../data/projectMedia";
-import { canRotateGallery, eligibleGalleryImages, galleryIndex, galleryRotationAction, nextGalleryIndex, type GalleryRotationAction } from "../utils/galleryState";
+import { GALLERY_CONCEPT_QUALIFIER, ILLUSTRATIVE_GALLERY_FALLBACK, PROJECT_CONCEPT_IMAGES, PROJECT_GALLERY_IMAGES, type GeneratedConceptRecord, type ProjectMediaRecord } from "../data/projectMedia";
+import { canRotateGallery, selectGalleryImages, galleryIndex, galleryRotationAction, nextGalleryIndex, type GalleryRotationAction } from "../utils/galleryState";
 import "./ProjectGallery.css";
 
 export interface ProjectGalleryProps {
   /** Only locally served, approved and identity-verified Thane photos/renders qualify. */
   images?: readonly ProjectMediaRecord[];
+  concepts?: readonly GeneratedConceptRecord[];
 }
 
-export function ProjectGallery({ images = PROJECT_GALLERY_IMAGES }: ProjectGalleryProps) {
-  const eligible = eligibleGalleryImages(images);
+export function ProjectGallery({ images = PROJECT_GALLERY_IMAGES, concepts = PROJECT_CONCEPT_IMAGES }: ProjectGalleryProps) {
+  const eligible = selectGalleryImages(images, concepts);
   return (
     <section id="gallery" className="project-gallery" aria-labelledby="project-gallery-heading">
       <div className="project-gallery__inner">
-        {eligible.length ? <ReadyGallery images={eligible} key={eligible.map((image) => image.id).join("|")} /> : <>
+        {eligible.length ? <ReadyGallery images={eligible} key={JSON.stringify(eligible)} /> : <>
           <h2 id="project-gallery-heading">A closer look.</h2>
           <figure className="project-gallery__fallback">
             <img src={illustrativeImage} alt={ILLUSTRATIVE_GALLERY_FALLBACK.alt}
@@ -29,7 +30,8 @@ export function ProjectGallery({ images = PROJECT_GALLERY_IMAGES }: ProjectGalle
   );
 }
 
-function ReadyGallery({ images }: { images: readonly ProjectMediaRecord[] }) {
+function ReadyGallery({ images }: { images: readonly (ProjectMediaRecord | GeneratedConceptRecord)[] }) {
+  const isConcept = images[0]?.kind === "generated-concept";
   const region = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const manualScroll = useRef(false);
@@ -106,7 +108,7 @@ function ReadyGallery({ images }: { images: readonly ProjectMediaRecord[] }) {
   }
 
   return (
-    <div ref={region} role="group" aria-roledescription={images.length > 1 ? "carousel" : undefined} aria-label="Project imagery"
+    <div ref={region} role="group" aria-roledescription={images.length > 1 ? "carousel" : undefined} aria-label={isConcept ? "Illustrative concepts, not actual project imagery" : "Project imagery"}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => { setFocused(true); setStopped(true); }}
       onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}>
@@ -134,14 +136,15 @@ function ReadyGallery({ images }: { images: readonly ProjectMediaRecord[] }) {
           </button>
         </div>}
       </div>
+      {isConcept && <p className="project-gallery__qualifier">{GALLERY_CONCEPT_QUALIFIER}</p>}
       <div ref={track} className="project-gallery__track" tabIndex={images.length > 1 ? 0 : undefined}
-        aria-label="Project images; scroll to explore" onPointerDown={stopForNativeScroll} onWheel={stopForNativeScroll}
+        aria-label={isConcept ? "Illustrative concepts; scroll to explore" : "Project images; scroll to explore"} onPointerDown={stopForNativeScroll} onWheel={stopForNativeScroll}
         onKeyDown={(event) => { if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown", " "].includes(event.key)) stopForNativeScroll(); }} onScroll={onScroll}>
         {images.map((record, position) => <figure key={record.id} className="project-gallery__card" role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${images.length}`}>
           <img src={record.image.src} width={record.image.width} height={record.image.height} alt={record.alt} loading="lazy" decoding="async"
             srcSet={record.variants?.map((variant) => `${variant.src} ${variant.width}w`).join(", ")}
             sizes="(max-width: 700px) 80vw, (max-width: 1000px) 40vw, 320px" />
-          <figcaption>{record.alt}<span>{record.depiction === "render" ? "Artistic impression" : "Project photograph"}</span></figcaption>
+          <figcaption>{record.kind === "generated-concept" ? record.conceptLabel : record.alt}<span>{record.kind === "generated-concept" ? GALLERY_CONCEPT_QUALIFIER : record.depiction === "render" ? "Artistic impression" : "Project photograph"}</span></figcaption>
         </figure>)}
       </div>
       <p className="project-gallery__status" role="status" aria-live="polite" aria-atomic="true">{announcement}</p>

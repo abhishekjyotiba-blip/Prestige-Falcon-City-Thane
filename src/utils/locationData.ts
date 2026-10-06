@@ -13,7 +13,7 @@ export interface VerifiedLocationPoint {
   id: string;
   name: string;
   category: LocationCategory;
-  distance: {
+  distance?: {
     value: number;
     unit: "km" | "m";
     mode: "driving" | "walking" | "transit" | "straight-line";
@@ -41,17 +41,18 @@ export function getLocationPage(
   points: readonly VerifiedLocationPoint[],
   category: LocationCategory,
   requestedPage: number,
+  allowExamples = true,
 ) {
   const verified = points.filter((point) => point.category === category);
   const displayed: LocationDisplayPoint[] = verified.length
     ? verified.map((point) => ({ ...point, kind: "verified" }))
-    : examples[category].map((name, index) => ({
+    : (allowExamples ? examples[category] : []).map((name, index) => ({
         id: `${category.toLowerCase()}-example-${index}`,
         name,
         category,
         kind: "example",
       }));
-  const totalPages = Math.ceil(displayed.length / LOCATION_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(displayed.length / LOCATION_PAGE_SIZE));
   const page = Math.max(
     0,
     Math.min(totalPages - 1, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 0),
@@ -59,7 +60,7 @@ export function getLocationPage(
   const start = page * LOCATION_PAGE_SIZE;
   return {
     places: displayed.slice(start, start + LOCATION_PAGE_SIZE),
-    isExample: !verified.length,
+    isExample: allowExamples && !verified.length,
     totalPages,
     page,
     start,

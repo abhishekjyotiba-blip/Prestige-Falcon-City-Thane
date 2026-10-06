@@ -596,6 +596,10 @@ body {
   align-items: end;
   gap: 14px;
 }
+.inline-enquiry > .button {
+  width: 100%;
+  justify-content: space-between;
+}
 .inline-field {
   min-width: 0;
 }

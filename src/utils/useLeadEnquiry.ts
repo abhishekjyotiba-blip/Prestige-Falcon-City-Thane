@@ -14,7 +14,8 @@ export type EnquiryIntent =
   | "video"
   | "callback";
 
-// Every form uses the same readiness boundary and submission contract.
+// The legacy submission adapter is private-development-only. A production env
+// flag is not approval to collect contacts during this noncollecting revision.
 export function useLeadEnquiry(intent: EnquiryIntent, sourceSection: string) {
   const localPreview = ["localhost", "127.0.0.1"].includes(
     window.location.hostname,
@@ -22,8 +23,7 @@ export function useLeadEnquiry(intent: EnquiryIntent, sourceSection: string) {
   const formAvailable =
     (localPreview &&
       import.meta.env.DEV &&
-      import.meta.env.VITE_PRIVATE_LOCAL_PREVIEW === true) ||
-    (import.meta.env.PROD && import.meta.env.VITE_LEAD_FORM_READY === "true");
+      import.meta.env.VITE_PRIVATE_LOCAL_PREVIEW === true);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [whatsappOptIn, setWhatsappOptIn] = useState(false);
@@ -146,4 +146,13 @@ export function useLeadEnquiry(intent: EnquiryIntent, sourceSection: string) {
     markStarted,
     submit,
   };
+}
+
+// The public shared form only edits a temporary draft. Keep it separate from
+// the private adapter so UI request kinds cannot accidentally reach the API.
+export function useEnquiryDraft() {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
+  return { name, setName, phone, setPhone, consent, setConsent };
 }

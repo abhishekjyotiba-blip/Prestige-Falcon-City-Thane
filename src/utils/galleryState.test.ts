@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CAMPAIGN_PROJECT_IDENTITY, PROJECT_GALLERY_IMAGES, ILLUSTRATIVE_GALLERY_FALLBACK, type ProjectMediaRecord } from "../data/projectMedia";
-import { canRotateGallery, eligibleGalleryImages, galleryIndex, galleryRotationAction, isEligibleGalleryImage, nextGalleryIndex, type GalleryRotationState } from "./galleryState";
+import { AMENITY_CONCEPT_IMAGES, PROJECT_CONCEPT_IMAGES, type GeneratedConceptRecord, CAMPAIGN_PROJECT_IDENTITY, PROJECT_GALLERY_IMAGES, ILLUSTRATIVE_GALLERY_FALLBACK, type ProjectMediaRecord } from "../data/projectMedia";
+import { eligibleConceptImages, isEligibleConceptImage, selectGalleryImages, canRotateGallery, eligibleGalleryImages, galleryIndex, galleryRotationAction, isEligibleGalleryImage, nextGalleryIndex, type GalleryRotationState } from "./galleryState";
 
 // Synthetic records only, never bundled as live campaign media.
 const fixture = (id = "synthetic-1"): ProjectMediaRecord => ({
@@ -81,3 +81,33 @@ test("keyboard and canceled pointer activation use current state; explicit Play 
   const pointerIntent = galleryRotationAction(true, 0, 4);
   assert.equal(galleryRotationAction(true, 0, 4, pointerIntent), "play");
 });
+
+test("generated concepts have a separate approved optimized illustrative eligibility gate", () => {
+  assert.deepEqual(PROJECT_CONCEPT_IMAGES, []);
+  assert.deepEqual(AMENITY_CONCEPT_IMAGES, { amenities: [], facilities: [] });
+  assert.equal(isEligibleConceptImage(conceptFixture()), true);
+  const excluded: Partial<GeneratedConceptRecord>[] = [
+    { approvalStatus: "pending" }, { approvalStatus: "excluded" }, { generatedOn: "2026-02-31" },
+    { generatedOn: "invalid" }, { generator: " " }, { conceptLabel: " " }, { alt: "Actual project clubhouse" },
+    { image: { src: "https://example.test/test.webp", width: 600, height: 600 } },
+    { image: { src: "/test.jpg", width: 600, height: 600 } },
+    { variants: [{ src: "//example.test/test.avif", width: 200, height: 200 }] },
+  ];
+  for (const change of excluded) assert.equal(isEligibleConceptImage({ ...conceptFixture(), ...change }), false, JSON.stringify(change));
+  assert.equal(isEligibleGalleryImage(conceptFixture() as unknown as ProjectMediaRecord), false);
+});
+
+test("concept selection removes duplicates and never displaces verified project media", () => {
+  const concepts = [conceptFixture("one"), conceptFixture("two"), conceptFixture("one")];
+  assert.deepEqual(eligibleConceptImages(concepts).map((record) => record.id), ["one", "two"]);
+  assert.deepEqual(selectGalleryImages([], concepts).map((record) => record.id), ["one", "two"]);
+  assert.deepEqual(selectGalleryImages([fixture()], concepts), [fixture()]);
+  assert.deepEqual(selectGalleryImages([{ ...fixture(), projectIdentityVerified: false }], concepts).map((record) => record.id), ["one", "two"]);
+  assert.deepEqual(selectGalleryImages([], [{ ...conceptFixture(), approvalStatus: "pending" }]), []);
+});
+
+function conceptFixture(id = "synthetic-concept"): GeneratedConceptRecord {
+  return { id, kind: "generated-concept", depiction: "ai-illustration", approvalStatus: "approved",
+    generatedOn: "2026-10-06", generator: "Synthetic test generator", conceptLabel: "Exterior concept",
+    alt: "Illustrative residential exterior; not an actual project image", image: { src: "/test-only/exterior.webp", width: 600, height: 600 } };
+}

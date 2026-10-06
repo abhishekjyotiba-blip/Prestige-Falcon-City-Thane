@@ -1,6 +1,6 @@
-import type { ApprovedGoogleMap } from "../utils/googleMap";
+import type { ApprovedGoogleMap, ApprovedMapPoint } from "../utils/googleMap";
 
-// The owner will supply the exact Thane Maps share link and share-generated embed.
-// Public-source research did not verify a project-site pin. Do not infer coordinates
-// from a road search, the Bengaluru Falcon City listing, or the corporate office.
+// Owner-approved exact Thane site identity/link/coordinates/map ID are still absent.
+// Never substitute a road midpoint, Bengaluru project or corporate office.
 export const APPROVED_PROJECT_MAP: ApprovedGoogleMap | null = null;
+export const APPROVED_NEARBY_PLACES: readonly ApprovedMapPoint[] = [];
