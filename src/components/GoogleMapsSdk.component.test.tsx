@@ -48,3 +48,18 @@ it("timeout and authentication error reject without retaining a script or auth c
   expect(host.gm_authFailure).toBe(previous);
   expect(vi.getTimerCount()).toBe(0);
 });
+
+it("real loader uses a reload-required error for a replacement key while retaining original-key reuse", async () => {
+  const { loadGoogleMapsSdk, MapsReloadRequiredError } = await import("../utils/googleMapsSdk");
+  const first = loadGoogleMapsSdk(key);
+  const script = document.head.querySelector("script")!;
+  const fixture = googleFixture(); host.google = fixture;
+  script.dispatchEvent(new Event("load"));
+  await first;
+  const replacement = `AIza${"y".repeat(35)}`;
+  await expect(loadGoogleMapsSdk(replacement)).rejects.toBeInstanceOf(MapsReloadRequiredError);
+  await expect(loadGoogleMapsSdk(replacement)).rejects.toBeInstanceOf(MapsReloadRequiredError);
+  expect(loadGoogleMapsSdk(key)).toBe(first);
+  expect(document.head.querySelectorAll("script")).toHaveLength(1);
+  expect(fixture.maps.importLibrary).toHaveBeenCalledTimes(2);
+});

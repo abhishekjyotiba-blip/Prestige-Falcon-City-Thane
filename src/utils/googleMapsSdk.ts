@@ -53,10 +53,18 @@ let pending: Promise<MapsSdk> | undefined;
 let loadedScript: HTMLScriptElement | undefined;
 let authRejected = false;
 let configuredKey: string | undefined;
+let initializedKey: string | undefined;
+/** Google SDK credentials belong to the document; a different key needs a reload. */
+export class MapsReloadRequiredError extends Error {
+  constructor() { super("Map configuration changed. Reload this page to use the new configuration."); }
+}
 /** Shared SDK lifetime; consumers dispose maps, not a script another consumer needs. */
 export function loadGoogleMapsSdk(apiKey: string): Promise<MapsSdk> {
   if (!isBrowserMapKey(apiKey)) return Promise.reject(new Error("Map configuration unavailable"));
-  if (pending) return configuredKey === apiKey ? pending : Promise.reject(new Error("Map configuration changed"));
+  if ((initializedKey && initializedKey !== apiKey) || (pending && configuredKey !== apiKey)) {
+    return Promise.reject(new MapsReloadRequiredError());
+  }
+  if (pending) return pending;
   configuredKey = apiKey;
   pending = new Promise<MapsSdk>((resolve, reject) => {
     const host = window as GoogleWindow;
@@ -68,7 +76,7 @@ export function loadGoogleMapsSdk(apiKey: string): Promise<MapsSdk> {
       clearTimeout(timer);
       stopAuth();
       if (script) { script.onload = null; script.onerror = null; }
-      if (sdk) resolve(sdk);
+      if (sdk) { initializedKey = apiKey; resolve(sdk); }
       else {
         script?.remove();
         reject(new Error("Google Maps could not load"));

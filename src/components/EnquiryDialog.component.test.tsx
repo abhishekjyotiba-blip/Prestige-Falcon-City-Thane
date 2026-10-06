@@ -70,4 +70,16 @@ describe("shared noncollecting enquiry dialog", () => {
     expect(screen.getByRole("heading", { name: "Project updates enquiry" })).toBeTruthy();
     unmount(); opener.remove();
   });
+
+  it("returns focus to the header when the opener leaves the document", () => {
+    const header = document.createElement("header");
+    header.className = "site-header";
+    const fallback = document.createElement("button");
+    fallback.className = "nav-action";
+    header.append(fallback); document.body.append(header);
+    const { unmount, opener } = show();
+    opener.remove(); unmount();
+    expect(document.activeElement).toBe(fallback);
+    header.remove();
+  });
 });

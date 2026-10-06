@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, MapPin } from "lucide-react";
 import { isBrowserMapKey, toLatLng, type ApprovedGoogleMap, type ApprovedMapPoint } from "../utils/googleMap";
-import { loadGoogleMapsSdk, watchMapsAuthFailure, type MapsSdk, type SdkMap, type SdkMarker } from "../utils/googleMapsSdk";
+import { loadGoogleMapsSdk, MapsReloadRequiredError, watchMapsAuthFailure, type MapsSdk, type SdkMap, type SdkMarker } from "../utils/googleMapsSdk";
 import "./GoogleProjectMap.css";
 
 export interface GoogleProjectMapProps {
@@ -17,7 +17,7 @@ export function GoogleProjectMap({ map, places = NO_PLACES, selectedId, start = 
   apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY }: GoogleProjectMapProps) {
   const configured = isBrowserMapKey(apiKey);
   const [attempt, setAttempt] = useState(0);
-  const [status, setStatus] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "loaded" | "error" | "reload-required">("idle");
   const [instance, setInstance] = useState<{ sdk: MapsSdk; map: SdkMap } | null>(null);
   const container = useRef<HTMLDivElement>(null);
   const disposeMap = useRef<() => void>(() => {});
@@ -29,7 +29,13 @@ export function GoogleProjectMap({ map, places = NO_PLACES, selectedId, start = 
   const sitePosition = `${map.projectPin.latitude},${map.projectPin.longitude}`;
 
   useEffect(() => {
-    if (!attempt || !configured || !container.current) return;
+    if (!configured) {
+      setInstance(null);
+      setStatus("idle");
+      setAttempt(0);
+      return;
+    }
+    if (!attempt || !container.current) return;
     let active = true;
     let mounted: SdkMap | undefined;
     let loadedSdk: MapsSdk | undefined;
@@ -70,7 +76,13 @@ export function GoogleProjectMap({ map, places = NO_PLACES, selectedId, start = 
         setStatus("loaded");
         if (document.activeElement === loadButton.current) fallbackLink.current?.focus({ preventScroll: true });
       });
-    }).catch(() => { if (active) { cleanupMap(); setStatus("error"); } });
+    }).catch((error: unknown) => {
+      if (active) {
+        cleanupMap();
+        setInstance(null);
+        setStatus(error instanceof MapsReloadRequiredError ? "reload-required" : "error");
+      }
+    });
     return () => {
       active = false;
       stopAuth();
@@ -130,13 +142,14 @@ export function GoogleProjectMap({ map, places = NO_PLACES, selectedId, start = 
   return (
     <div className="google-project-map">
       <div className="google-project-map__frame" aria-busy={status === "loading"}>
-        <div ref={container} className="google-project-map__canvas" aria-label={`${map.projectIdentity} Google Map`} style={{ visibility: status === "loaded" ? "visible" : "hidden" }} aria-hidden={status !== "loaded"} />
-        {status !== "loaded" && (
+        <div ref={container} className="google-project-map__canvas" aria-label={`${map.projectIdentity} Google Map`} style={{ visibility: configured && status === "loaded" ? "visible" : "hidden" }} aria-hidden={!configured || status !== "loaded"} />
+        {(!configured || status !== "loaded") && (
           <div className="google-project-map__preload">
             <MapPin size={24} aria-hidden="true" />
-            <strong>{!configured ? "Map configuration unavailable" : status === "error" ? "Google Map unavailable" : status === "loading" ? "Loading Google Map…" : "Google Maps"}</strong>
-            <p role="status">{!configured ? "Interactive map pending configuration." : status === "error" ? "The map could not load. Nearby details remain available." : "Loading connects to Google."}</p>
-            {configured && <button ref={loadButton} className="button dark" type="button" disabled={status === "loading"} onClick={() => setAttempt((value) => value + 1)}>{status === "error" ? "Retry Google Map" : "Load Google Map"}</button>}
+            <strong>{!configured ? "Map configuration unavailable" : status === "reload-required" ? "Page reload required" : status === "error" ? "Google Map unavailable" : status === "loading" ? "Loading Google Map…" : "Google Maps"}</strong>
+            <p role="status">{!configured ? "Interactive map pending configuration." : status === "reload-required" ? "Map configuration changed. Reload this page to use the new configuration." : status === "error" ? "The map could not load. Nearby details remain available." : "Loading connects to Google."}</p>
+            {configured && status === "reload-required" && <button className="button dark" type="button" onClick={() => window.location.reload()}>Reload page</button>}
+            {configured && status !== "reload-required" && <button ref={loadButton} className="button dark" type="button" disabled={status === "loading"} onClick={() => setAttempt((value) => value + 1)}>{status === "error" ? "Retry Google Map" : "Load Google Map"}</button>}
           </div>
         )}
       </div>

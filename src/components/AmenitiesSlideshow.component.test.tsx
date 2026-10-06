@@ -65,6 +65,27 @@ describe("AmenitiesSlideshow manual DOM behavior", () => {
     fireEvent.touchEnd(figure, { changedTouches: [{ clientX: 100, clientY: 110 }] });
     expect(screen.getByText("2 / 3")).toBeTruthy();
   });
+  it("replaces failed sources/variants truthfully and resets on slide/category/data changes", () => {
+    const records = { ...concepts, amenities: [{ ...concepts.amenities[0], variants: [{ src: "/test-only/garden-small.webp", width: 400, height: 300 }] }, ...concepts.amenities.slice(1)] };
+    const { rerender } = render(<AmenitiesSlideshow concepts={records} />);
+    const failed = screen.getByRole("img");
+    expect(failed.getAttribute("srcset")).toContain("garden-small.webp");
+    fireEvent.error(failed);
+    expect(failed.getAttribute("src")).toContain("temporary-illustrative-exterior");
+    expect(failed.getAttribute("srcset")).toBeNull();
+    expect(failed.getAttribute("alt")).toContain("not a rendering of this project");
+    expect(screen.getByText(/Image unavailable · Existing illustrative image/)).toBeTruthy();
+    expect(screen.queryByText(/AI-generated illustrative concept/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Next feature image" }));
+    expect(screen.getByRole("img").getAttribute("src")).toBe(concepts.amenities[1].image.src);
+    fireEvent.error(screen.getByRole("img"));
+    fireEvent.click(screen.getByRole("tab", { name: "Facilities" }));
+    expect(screen.getByRole("img").getAttribute("src")).toBe(concepts.facilities[0].image.src);
+    fireEvent.error(screen.getByRole("img"));
+    rerender(<AmenitiesSlideshow concepts={{ ...records, facilities: [{ ...concepts.facilities[0], image: { ...concepts.facilities[0].image, src: "/test-only/replacement.webp" } }] }} />);
+    expect(screen.getByRole("img").getAttribute("src")).toBe("/test-only/replacement.webp");
+    expect(screen.getByText(/AI-generated illustrative concept/)).toBeTruthy();
+  });
   it("never auto-advances a manual slideshow", () => {
     vi.useFakeTimers();
     render(<AmenitiesSlideshow concepts={concepts} />);

@@ -140,14 +140,23 @@ function ReadyGallery({ images }: { images: readonly (ProjectMediaRecord | Gener
       <div ref={track} className="project-gallery__track" tabIndex={images.length > 1 ? 0 : undefined}
         aria-label={isConcept ? "Illustrative concepts; scroll to explore" : "Project images; scroll to explore"} onPointerDown={stopForNativeScroll} onWheel={stopForNativeScroll}
         onKeyDown={(event) => { if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown", " "].includes(event.key)) stopForNativeScroll(); }} onScroll={onScroll}>
-        {images.map((record, position) => <figure key={record.id} className="project-gallery__card" role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${images.length}`}>
-          <img src={record.image.src} width={record.image.width} height={record.image.height} alt={record.alt} loading="lazy" decoding="async"
-            srcSet={record.variants?.map((variant) => `${variant.src} ${variant.width}w`).join(", ")}
-            sizes="(max-width: 700px) 80vw, (max-width: 1000px) 40vw, 320px" />
-          <figcaption>{record.kind === "generated-concept" ? record.conceptLabel : record.alt}<span>{record.kind === "generated-concept" ? GALLERY_CONCEPT_QUALIFIER : record.depiction === "render" ? "Artistic impression" : "Project photograph"}</span></figcaption>
-        </figure>)}
+        {images.map((record, position) => <GalleryCard key={record.id} record={record} position={position} count={images.length} />)}
       </div>
       <p className="project-gallery__status" role="status" aria-live="polite" aria-atomic="true">{announcement}</p>
     </div>
   );
+}
+
+function GalleryCard({ record, position, count }: { record: ProjectMediaRecord | GeneratedConceptRecord; position: number; count: number }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = imageFailed ? { src: illustrativeImage, width: ILLUSTRATIVE_GALLERY_FALLBACK.width, height: ILLUSTRATIVE_GALLERY_FALLBACK.height } : record.image;
+  return <figure className="project-gallery__card" role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${count}`}>
+    <img src={image.src} width={image.width} height={image.height} alt={imageFailed ? ILLUSTRATIVE_GALLERY_FALLBACK.alt : record.alt}
+      onError={() => { if (!imageFailed) setImageFailed(true); }} loading="lazy" decoding="async"
+      srcSet={imageFailed ? undefined : record.variants?.map((variant) => `${variant.src} ${variant.width}w`).join(", ")}
+      sizes="(max-width: 700px) 80vw, (max-width: 1000px) 40vw, 320px" />
+    <figcaption>{imageFailed ? "Illustrative exterior" : record.kind === "generated-concept" ? record.conceptLabel : record.alt}
+      <span>{imageFailed ? "Image unavailable · Existing illustrative image · Not an actual project image" : record.kind === "generated-concept" ? GALLERY_CONCEPT_QUALIFIER : record.depiction === "render" ? "Artistic impression" : "Project photograph"}</span>
+    </figcaption>
+  </figure>;
 }

@@ -5,10 +5,12 @@ import { GoogleProjectMap } from "./GoogleProjectMap";
 import { MAP_PROJECT_IDENTITY, type ApprovedGoogleMap, type ApprovedMapPoint } from "../utils/googleMap";
 
 const mocks = vi.hoisted(() => ({ load: vi.fn(), auth: vi.fn(), stopAuth: vi.fn() }));
-vi.mock("../utils/googleMapsSdk", () => ({
+vi.mock("../utils/googleMapsSdk", async () => ({
+  ...await vi.importActual<typeof import("../utils/googleMapsSdk")>("../utils/googleMapsSdk"),
   loadGoogleMapsSdk: mocks.load,
   watchMapsAuthFailure: (callback: () => void) => { mocks.auth.mockImplementation(callback); return mocks.stopAuth; },
 }));
+import { MapsReloadRequiredError } from "../utils/googleMapsSdk";
 const site: ApprovedGoogleMap = { projectIdentity: MAP_PROJECT_IDENTITY, approvalStatus: "approved", verifiedOn: "2026-10-02",
   sourceUrl: "https://example.test/source", shareUrl: "https://maps.app.goo.gl/Synthetic", mapId: "synthetic-map-id", projectPin: { latitude: 0, longitude: 0 } };
 const places: ApprovedMapPoint[] = [1, 2].map((number) => ({ id: `synthetic-${number}`, name: `Synthetic ${number}`, category: "Connectivity",
@@ -133,6 +135,37 @@ describe("conditional Google map", () => {
     expect(document.activeElement).toBe(marker);
     expect(fixture.instances).toHaveLength(1);
     expect(fixture.panTo).not.toHaveBeenCalled();
+  });
+  it("loaded map resets truthfully for missing/invalid key and requires a fresh load when restored", async () => {
+    const fixture = sdkFixture(); mocks.load.mockResolvedValue(fixture.sdk);
+    const view = render(<GoogleProjectMap map={site} apiKey={key} places={places} />);
+    fireEvent.click(screen.getByRole("button", { name: "Load Google Map" }));
+    await screen.findByRole("button", { name: "Select Synthetic 1" });
+    for (const unavailableKey of ["", "invalid"]) {
+      view.rerender(<GoogleProjectMap map={site} apiKey={unavailableKey} places={places} />);
+      expect(screen.getByText("Map configuration unavailable")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Select Synthetic 1" })).toBeNull();
+      expect(screen.queryByRole("button", { name: /Retry/ })).toBeNull();
+      const calls = mocks.load.mock.calls.length;
+      view.rerender(<GoogleProjectMap map={site} apiKey={key} places={places} />);
+      expect(screen.getByRole("button", { name: "Load Google Map" })).toBeTruthy();
+      expect(mocks.load).toHaveBeenCalledTimes(calls);
+      fireEvent.click(screen.getByRole("button", { name: "Load Google Map" }));
+      await screen.findByRole("button", { name: "Select Synthetic 1" });
+    }
+    expect(fixture.unbindAll).toHaveBeenCalledTimes(2);
+    expect(fixture.markers.slice(0, 6).every((marker) => marker.map === null)).toBe(true);
+  });
+  it("key changes requiring a document reload never offer ineffective Retry", async () => {
+    const fixture = sdkFixture(); mocks.load.mockResolvedValueOnce(fixture.sdk).mockRejectedValueOnce(new MapsReloadRequiredError());
+    const view = render(<GoogleProjectMap map={site} apiKey={key} places={places} />);
+    fireEvent.click(screen.getByRole("button", { name: "Load Google Map" }));
+    await screen.findByRole("button", { name: "Select Synthetic 1" });
+    view.rerender(<GoogleProjectMap map={site} apiKey={`AIza${"y".repeat(35)}`} places={places} />);
+    await screen.findByRole("button", { name: "Reload page" });
+    expect(screen.getByText("Page reload required")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Retry Google Map" })).toBeNull();
+    expect(fixture.unbindAll).toHaveBeenCalledTimes(1);
   });
   it("ignores a delayed load completion after unmount", async () => {
     let resolve!: (value: unknown) => void;

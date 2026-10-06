@@ -36,12 +36,15 @@ export function AmenitiesSlideshow({ concepts = AMENITY_CONCEPT_IMAGES }: Amenit
 
 function ManualSlides({ slides, category }: { slides: readonly GeneratedConceptRecord[]; category: AmenityCategory }) {
   const [index, setIndex] = useState(0);
+  const [imageFailed, setImageFailed] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const touch = useRef<{ x: number; y: number } | null>(null);
   const current = slides[index];
+  const displayed = imageFailed ? undefined : current;
   const count = slides.length;
   function move(next: number) {
     if (next < 0 || next >= count || next === index) return;
+    setImageFailed(false);
     setIndex(next);
     setAnnouncement(`${slides[next].conceptLabel}, image ${next + 1} of ${count}`);
   }
@@ -54,14 +57,15 @@ function ManualSlides({ slides, category }: { slides: readonly GeneratedConceptR
       if (!start || !event.changedTouches[0]) return;
       move(amenitySwipeIndex(index, count, event.changedTouches[0].clientX - start.x, event.changedTouches[0].clientY - start.y));
     }}>
-      <img src={current?.image.src ?? illustrativeImage} alt={current?.alt ?? ILLUSTRATIVE_GALLERY_FALLBACK.alt}
-        width={current?.image.width ?? ILLUSTRATIVE_GALLERY_FALLBACK.width} height={current?.image.height ?? ILLUSTRATIVE_GALLERY_FALLBACK.height}
-        srcSet={current?.variants?.map((variant) => `${variant.src} ${variant.width}w`).join(", ")}
+      <img key={current?.id ?? "fallback"} src={displayed?.image.src ?? illustrativeImage} alt={displayed?.alt ?? ILLUSTRATIVE_GALLERY_FALLBACK.alt}
+        onError={() => { if (current && !imageFailed) setImageFailed(true); }}
+        width={displayed?.image.width ?? ILLUSTRATIVE_GALLERY_FALLBACK.width} height={displayed?.image.height ?? ILLUSTRATIVE_GALLERY_FALLBACK.height}
+        srcSet={displayed?.variants?.map((variant) => `${variant.src} ${variant.width}w`).join(", ")}
         sizes="(max-width: 700px) calc(100vw - 32px), (max-width: 1250px) 90vw, 1120px" loading="lazy" decoding="async" />
       <figcaption>
-        <div className="amenities-slideshow__label"><strong>{current?.conceptLabel ?? "Illustrative exterior"}</strong>
+        <div className="amenities-slideshow__label"><strong>{displayed?.conceptLabel ?? "Illustrative exterior"}</strong>
           {count > 0 && <span>{index + 1} / {count}</span>}</div>
-        <p>{current ? AMENITY_CONCEPT_QUALIFIER : "Existing illustrative image · Amenity and facility imagery pending"}</p>
+        <p>{displayed ? AMENITY_CONCEPT_QUALIFIER : imageFailed ? "Image unavailable · Existing illustrative image · Not a confirmed project amenity" : "Existing illustrative image · Amenity and facility imagery pending"}</p>
       </figcaption>
     </figure>
     {count > 1 && <div className="amenities-slideshow__controls" aria-label="Slideshow controls">

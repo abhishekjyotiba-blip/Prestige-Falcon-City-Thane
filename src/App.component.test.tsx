@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
@@ -73,6 +73,36 @@ describe("enquiry CTA routing", () => {
       fireEvent.click(screen.getByRole("button", { name: "WhatsApp enquiry" }));
       expect(screen.getByRole("heading", { name: "WhatsApp enquiry" })).toBeTruthy();
       expect(screen.getByRole("dialog").getAttribute("data-source")).toBe("sticky_whatsapp");
+    } finally { globalThis.IntersectionObserver = original; }
+  });
+
+  it("preserves registration-focus visibility and final-section sticky suppression", () => {
+    const original = globalThis.IntersectionObserver;
+    const observers = new Map<Element, IntersectionObserverCallback>();
+    globalThis.IntersectionObserver = class {
+      constructor(private callback: IntersectionObserverCallback) {}
+      observe(target: Element) { observers.set(target, this.callback); }
+      disconnect() {}
+    } as unknown as typeof IntersectionObserver;
+    const visible = (selector: string, isIntersecting: boolean) => {
+      const target = document.querySelector(selector)!;
+      act(() => observers.get(target)!([{ target, isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver));
+    };
+    try {
+      render(<App />);
+      visible(".hero", false); visible(".registration-section", true); visible(".closing-section", false);
+      expect(document.querySelector(".sticky-actions")).not.toBeNull();
+      act(() => screen.getByRole("button", { name: "Express your interest" }).focus());
+      expect(document.querySelector(".sticky-actions")).toBeNull();
+      visible(".registration-section", false);
+      expect(document.querySelector(".sticky-actions")).not.toBeNull();
+      visible(".registration-section", true);
+      expect(document.querySelector(".sticky-actions")).toBeNull();
+      act(() => screen.getByRole("button", { name: "Express your interest" }).blur());
+      visible(".closing-section", true);
+      expect(document.querySelector(".sticky-actions")).toBeNull();
+      visible(".closing-section", false);
+      expect(document.querySelector(".sticky-actions")).not.toBeNull();
     } finally { globalThis.IntersectionObserver = original; }
   });
 });
