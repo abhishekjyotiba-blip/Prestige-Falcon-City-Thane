@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { assertNoCollectionFor, monitorCollection } from "./collectionAudit";
 
 async function openPrice(page: Page) {
   const opener = page.getByRole("button", { name: /Get latest price/ });
@@ -59,20 +60,7 @@ test("removed opener uses a visible header focus fallback", async ({ page, isMob
 });
 
 test("public submission and duplicate attempts never collect or emit success", async ({ page }) => {
-  const contactRequests: string[] = [];
-  page.on("request", (request) => {
-    if (!["GET", "HEAD"].includes(request.method())) contactRequests.push(request.url());
-  });
-  await page.route("**/*", (route) => ["GET", "HEAD"].includes(route.request().method())
-    ? route.continue() : route.abort());
-  await page.evaluate(() => {
-    (window as unknown as { storageWrites?: string[] }).storageWrites = [];
-    const original = Storage.prototype.setItem;
-    Storage.prototype.setItem = function (key, value) {
-      (window as unknown as { storageWrites: string[] }).storageWrites.push(`${key}:${value}`);
-      original.call(this, key, value);
-    };
-  });
+  const contactRequests = await monitorCollection(page);
   await openPrice(page);
   await page.getByLabel("Your name").fill("Synthetic No Collection");
   await page.getByLabel("Mobile number").fill("9876543210");
@@ -89,15 +77,13 @@ test("public submission and duplicate attempts never collect or emit success", a
     });
   });
   expect(prevented).toEqual([true, true]);
-  expect(contactRequests).toEqual([]);
-  const audit = await page.evaluate(() => {
-    const target = window as unknown as { storageWrites: string[]; dataLayer: unknown[] };
-    return { writes: target.storageWrites, events: target.dataLayer };
-  });
-  expect(audit.writes).toEqual([]);
-  expect(JSON.stringify(audit.events)).not.toMatch(/Synthetic No Collection|9876543210|lead_success|development_lead_saved/);
   await expect(page.getByText("Preview only.", { exact: false })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(1);
+  await page.getByRole("button", { name: "Close enquiry form" }).click();
+  await page.getByRole("button", { name: /View plans & brochure/ }).click();
+  await expect(page.getByLabel("Your name")).toHaveValue("");
+  await assertNoCollectionFor(page, contactRequests);
+
 });
 
 test("all enquiry routes emit one contextual open event without typed contact data", async ({ page, isMobile }) => {
