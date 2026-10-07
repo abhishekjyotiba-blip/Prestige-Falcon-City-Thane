@@ -5,6 +5,9 @@
 .google-project-map__preload > strong { font-size: 16px; }
 .google-project-map__preload p { margin: 0; color: #625e57; font-size: 12px; line-height: 1.5; }
 .google-project-map__preload .button { margin-top: 4px; min-height: 44px; white-space: normal; }
+/* Keep keyboard-focused actions clear of the fixed header and sticky CTA. */
+.google-project-map__preload .button,
+.google-project-map__link { scroll-margin-block: 100px calc(90px + env(safe-area-inset-bottom)); }
 .google-project-map__link { min-height: 44px; display: flex; width: fit-content; align-items: center; gap: 7px; color: #655332; font-size: 12px; line-height: 1.4; }
 .google-project-map__place-marker, .google-project-map__site-marker { width: 44px; height: 44px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #334139; color: white; font-size: 16px; font-weight: 700; box-shadow: 0 2px 5px #0004; }
 .google-project-map__place-marker { cursor: pointer; }
