@@ -24,6 +24,8 @@ The production build deliberately sets the obsolete `VITE_LEAD_FORM_READY=true` 
 
 Tests cover real keyboard dialog focus, close/return-focus, draft reset, every enquiry source, contact-free analytics, bypassed and duplicate submission attempts, sticky suppression, tab navigation, schematic marker/list selection and distance-pending labels. Phone emulation is not physical-device or Safari acceptance.
 
+The collection audit monitors requests, storage and analytics for one second after submission, close and reopening. Three synthetic mutation checks per browser project prove that deferred writes fail the audit. This bounded window does not guarantee detection of arbitrarily delayed effects.
+
 The suite needs no secrets, live Google Maps, generated images, approved geography or production lead destination. It does not prove those external integrations work.
 
 ```sh
