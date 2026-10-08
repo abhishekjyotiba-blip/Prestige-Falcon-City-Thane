@@ -2,7 +2,6 @@
   --sand: #f5f2ea;
   --paper: #faf8f3;
   --ink: #1c221f;
-  --muted: #6d716d;
   --gold: #c3aa7a;
   --line: #dcd6c9;
 }
@@ -94,32 +93,6 @@ body {
   flex-direction: column;
   align-items: flex-start;
   line-height: 1;
-}
-.brand-name {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 29px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-.brand-sub {
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  font-weight: 700;
-  margin-top: 3px;
-}
-.brand-sub i {
-  width: 12px;
-  display: inline-block;
-  height: 1px;
-  background: #a38758;
-  vertical-align: middle;
-  margin: 0 3px;
-}
-.brand small {
-  font-size: 8px;
-  color: #81796d;
-  margin-top: 5px;
-  letter-spacing: 0.06em;
 }
 .site-nav {
   display: flex;
@@ -265,19 +238,6 @@ body {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 23px;
   color: #957b4f;
-}
-.channel-notice {
-  position: fixed;
-  z-index: 60;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(430px, calc(100vw - 30px));
-  padding: 16px 20px;
-  color: #fff;
-  background: #202a25;
-  box-shadow: 0 18px 60px #0004;
-  font-size: 12px;
 }
 .intro-section,
 .experience-section {
@@ -462,119 +422,6 @@ body {
   font-size: 13px;
   margin: 16px 0 0;
 }
-.carousel-controls {
-  display: flex;
-  gap: 7px;
-}
-.carousel-controls button {
-  width: 46px;
-  height: 46px;
-  border: 1px solid #9a9486;
-  border-radius: 50%;
-  background: transparent;
-  color: #333a33;
-  display: grid;
-  place-items: center;
-}
-.carousel-controls button:hover {
-  background: #fff;
-}
-.experience-tabs {
-  display: flex;
-  gap: 32px;
-  margin-top: 42px;
-  border-bottom: 1px solid #c3c2b6;
-}
-.experience-tabs button {
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  padding: 0 0 15px;
-  color: #757a71;
-  font-size: 13px;
-  font-weight: 700;
-  text-align: left;
-  min-width: 130px;
-}
-.experience-tabs button[aria-selected="true"] {
-  color: var(--ink);
-  border-color: #ac8b56;
-}
-.experience-tabs span {
-  font-size: 9px;
-  margin-left: 9px;
-  color: #9c8c71;
-}
-.experience-gallery {
-  display: grid;
-  grid-template-columns: 1.7fr 1fr;
-  min-height: 375px;
-  background: #fbf9f4;
-}
-.experience-photo {
-  position: relative;
-  overflow: hidden;
-  background-size: cover;
-  background-position: center;
-  background-image:
-    linear-gradient(0deg, #1b2b24aa, transparent 40%),
-    url("./assets/images/luxury_infinity_pool_1790331171326.webp");
-}
-.experience-photo.movement {
-  background-image:
-    linear-gradient(0deg, #1b2b24aa, transparent 40%),
-    url("./assets/images/residences_interior_balcony_1790328253674.webp");
-}
-.experience-photo.garden {
-  background-image:
-    linear-gradient(0deg, #1b2b24aa, transparent 40%),
-    url("./assets/images/lifestyle_retail_landscape_1790328269532.webp");
-}
-.photo-number {
-  position: absolute;
-  top: 24px;
-  left: 27px;
-  color: #fff;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-}
-.photo-disclaimer {
-  position: absolute;
-  bottom: 20px;
-  left: 26px;
-  color: #fff;
-  font-size: 10px;
-  background: #0008;
-  padding: 8px;
-}
-.experience-caption {
-  padding: 70px 55px;
-}
-.experience-caption h3 {
-  font-size: 49px;
-  line-height: 1;
-  margin: 18px 0;
-}
-.experience-caption p {
-  font-size: 13px;
-  line-height: 1.75;
-  color: #6a6a61;
-  max-width: 270px;
-}
-.slide-dots {
-  display: flex;
-  gap: 10px;
-  margin-top: 28px;
-}
-.slide-dots button {
-  width: 31px;
-  height: 4px;
-  border: 0;
-  background: #d9d3c9;
-}
-.slide-dots button[aria-current="true"] {
-  background: #a98f5c;
-}
 .registration-section {
   padding: 28px max(5.2vw, 24px) 0;
 }
@@ -590,50 +437,9 @@ body {
   font-size: 32px;
   line-height: 1.15;
 }
-.inline-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  align-items: end;
-  gap: 14px;
-}
 .inline-enquiry > .button {
   width: 100%;
   justify-content: space-between;
-}
-.inline-field {
-  min-width: 0;
-}
-.inline-field label {
-  display: block;
-  margin-bottom: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .08em;
-}
-.inline-field input {
-  width: 100%;
-  min-width: 0;
-  height: 48px;
-  padding: 0 13px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink);
-  font-size: 16px;
-}
-.inline-fields .button {
-  min-height: 48px;
-}
-.inline-enquiry input:disabled {
-  background: #f0ede5;
-  color: #72776c;
-  opacity: 1;
-  cursor: not-allowed;
-}
-.inline-enquiry .button:disabled {
-  color: #4f5147;
-  background: #d4c4a6;
-  cursor: not-allowed;
-  transform: none;
 }
 .cta-benefits {
   display: flex;
@@ -655,16 +461,6 @@ body {
 .cta-benefits svg {
   flex-shrink: 0;
   color: #897044;
-}
-.inline-enquiry .form-notice {
-  margin: 12px 0 0;
-}
-.inline-result {
-  margin: 0;
-  padding: 18px;
-  background: #e8edde;
-  font-size: 13px;
-  line-height: 1.6;
 }
 .closing-section {
   padding: 80px max(5.2vw, 24px);
@@ -711,45 +507,8 @@ body {
   font-size: 46px;
   line-height: 1.1;
 }
-.visit-content .inline-fields {
-  grid-template-columns: 1fr;
-}
 .visit-content .cta-benefits {
   gap: 12px 20px;
-}
-.site-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  gap: 35px;
-  padding: 42px max(5.2vw, 24px) 90px;
-  background: #f8f5ed;
-  color: #51574d;
-}
-.site-footer div {
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;
-}
-.site-footer strong {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 24px;
-  letter-spacing: 0.14em;
-  color: #1e241f;
-}
-.site-footer span {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-}
-.site-footer p {
-  max-width: 560px;
-  font-size: 10px;
-  line-height: 1.7;
-  margin: 0;
-}
-.site-footer a {
-  font-size: 11px;
-  color: #584b34;
 }
 .sticky-actions {
   position: fixed;
@@ -783,124 +542,18 @@ body {
 .sticky-arrow {
   animation: invite-once 0.7s ease-out 2;
 }
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  background: #0c1713bb;
-  z-index: 70;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
-.request-dialog {
-  position: relative;
-  max-height: calc(100svh - 40px);
-  overflow: auto;
-  width: min(460px, 100%);
-  background: #faf8f3;
-  padding: 42px 42px 31px;
-  box-shadow: 0 25px 90px #0006;
-}
-.dialog-close {
-  position: absolute;
-  right: 16px;
-  top: 15px;
-  background: none;
-  border: 0;
-  color: #1d2520;
-}
-.request-dialog h2 {
-  font-size: 49px;
-  line-height: 0.95;
-  margin: 16px 0 18px;
-}
-.dialog-intro,
-.request-result p {
-  color: #5e665e;
-  font-size: 12px;
-  line-height: 1.7;
-}
-.request-dialog form {
-  display: flex;
-  flex-direction: column;
-  margin-top: 25px;
-}
-.request-dialog form > label:not(.check-row) {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin: 0 0 7px;
-}
-.request-dialog form > input {
-  background: #fff;
-  border: 1px solid #d2ccbe;
-  height: 48px;
-  padding: 0 13px;
-  margin-bottom: 18px;
-  font-size: 13px;
-}
-.form-notice,
-.form-small {
-  font-size: 10px;
-  line-height: 1.6;
-  color: #686d65;
-}
-.check-row {
-  display: flex;
-  align-items: start;
-  gap: 9px;
-  font-size: 10px;
-  line-height: 1.5;
-  margin: 9px 0 19px;
-  color: #444b43;
-}
-.check-row input {
-  accent-color: #937847;
-  margin-top: 2px;
-}
-.form-error {
-  font-size: 11px;
-  color: #9b3328;
-  padding: 9px;
-  background: #fcebe6;
-}
-.submit-button {
-  width: 100%;
-  justify-content: space-between;
-}
-.submit-button:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-.form-small {
-  text-align: center;
-  margin: 12px 0 0;
-}
-.request-result .button {
-  margin-top: 18px;
-}
 @keyframes invite-once {
   50% {
     transform: translateX(5px);
   }
 }
 @media (max-width: 1020px) {
-  .registration-card .inline-fields {
-    grid-template-columns: 1fr 1fr;
-  }
-  .registration-card .inline-fields .button {
-    grid-column: 1 / -1;
-  }
   .visit-content {
     padding: 32px 24px;
   }
 
   .document-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .experience-gallery {
-    grid-template-columns: 1.2fr 1fr;
   }
   .site-nav {
     gap: 16px;
@@ -916,10 +569,6 @@ body {
   .registration-card h2 {
     font-size: 23px;
     margin-bottom: 16px;
-  }
-  .registration-card .inline-fields {
-    grid-template-columns: 1fr;
-    gap: 12px;
   }
   .cta-benefits {
     gap: 10px 16px;
@@ -947,15 +596,6 @@ body {
   .site-header {
     height: 70px;
     padding: 0 18px;
-  }
-  .brand-name {
-    font-size: 24px;
-  }
-  .brand-sub {
-    font-size: 8px;
-  }
-  .brand small {
-    font-size: 7px;
   }
   .menu-toggle {
     display: block;
@@ -1091,36 +731,6 @@ body {
     font-size: 11px;
     line-height: 1.6;
   }
-  .carousel-controls {
-    align-self: end;
-    flex-shrink: 0;
-  }
-  .carousel-controls button {
-    width: 33px;
-    height: 33px;
-  }
-  .experience-tabs {
-    margin-top: 30px;
-  }
-  .experience-gallery {
-    display: block;
-  }
-  .experience-photo {
-    height: 240px;
-  }
-  .experience-caption {
-    padding: 29px 22px 34px;
-  }
-  .experience-caption h3 {
-    font-size: 38px;
-  }
-  .site-footer {
-    display: block;
-    padding: 35px 20px 110px;
-  }
-  .site-footer p {
-    margin: 19px 0;
-  }
   .sticky-actions {
     gap: 7px;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
@@ -1136,19 +746,6 @@ body {
   .sticky-chat {
     font-size: 10px;
     padding: 11px 8px;
-  }
-  .request-dialog {
-    padding: 32px 23px 23px;
-  }
-  .request-dialog h2 {
-    font-size: 42px;
-  }
-  .dialog-backdrop {
-    padding: 12px;
-    align-items: end;
-  }
-  .request-dialog {
-    max-height: calc(100svh - 24px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
