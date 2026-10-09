@@ -1,0 +1,21 @@
+.google-project-map__frame { min-height: 290px; position: relative; background: var(--paper, #faf8f3); border: 1px solid var(--line, #dcd6c9); display: grid; place-items: center; }
+.google-project-map__canvas { position: absolute; inset: 0; }
+.google-project-map__preload { position: relative; display: grid; justify-items: center; gap: 8px; padding: 18px; text-align: center; }
+.google-project-map__preload > svg { color: #897044; }
+.google-project-map__preload > strong { font-size: 16px; }
+.google-project-map__preload p { margin: 0; color: #625e57; font-size: 12px; line-height: 1.5; }
+.google-project-map__preload .button { margin-top: 4px; min-height: 44px; white-space: normal; }
+/* Keep keyboard-focused actions clear of the fixed header and sticky CTA. */
+.google-project-map__preload .button,
+.google-project-map__link { scroll-margin-block: 100px calc(90px + env(safe-area-inset-bottom)); }
+.google-project-map__link { min-height: 44px; display: flex; width: fit-content; align-items: center; gap: 7px; color: #655332; font-size: 12px; line-height: 1.4; }
+.google-project-map__place-marker, .google-project-map__site-marker { width: 44px; height: 44px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #334139; color: white; font-size: 16px; font-weight: 700; box-shadow: 0 2px 5px #0004; }
+.google-project-map__place-marker { cursor: pointer; }
+.google-project-map__site-marker { background: #d4b879; color: #24231f; border-radius: 8px; }
+.google-project-map__place-marker[aria-pressed="true"] { background: #d4b879; color: #24231f; }
+.google-project-map__place-marker:focus-visible { outline: 3px solid #ad8b4e; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .google-project-map__frame { min-height: 200px; }
+  .location-experience.location-experience--google { padding-block: 22px 20px; }
+  .location-experience--google .location-experience__inner > h2 { margin-bottom: 16px; }
+}

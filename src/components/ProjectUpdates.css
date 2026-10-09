@@ -1,0 +1,13 @@
+.project-updates { padding: 48px max(5.2vw, 24px); background: var(--sand, #f5f2ea); }
+.project-updates__card { max-width: 1120px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 28px; padding: 28px 32px; border: 1px solid var(--line, #dcd6c9); background: var(--paper, #faf8f3); }
+.project-updates__card > div { min-width: 0; }
+.project-updates__card .eyebrow { display: flex; align-items: center; gap: 6px; }
+.project-updates .project-updates__card h2 { font-size: 34px; line-height: 1.15; font-weight: 400; margin: 12px 0 8px; overflow-wrap: anywhere; }
+.project-updates__card p { margin: 0; color: #62675d; font-size: 14px; line-height: 1.5; }
+.project-updates__card .button { flex-shrink: 0; min-height: 48px; }
+@media (max-width: 700px) {
+  .project-updates { padding: 30px 18px; }
+  .project-updates__card { flex-direction: column; align-items: stretch; gap: 20px; padding: 24px 22px; }
+  .project-updates .project-updates__card h2 { font-size: 29px; }
+  .project-updates__card .button { white-space: normal; }
+}

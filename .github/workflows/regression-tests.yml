@@ -1,0 +1,38 @@
+name: Regression tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # The repository currently has no tracked lockfile. Do not use npm ci or
+      # a peer-dependency bypass. Keep installation consistent with local setup.
+      - run: npm install --no-package-lock
+      - run: npm run lint
+      - run: npm run test:frontend
+      - run: npm run test:components
+      - run: npm run test:server
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
